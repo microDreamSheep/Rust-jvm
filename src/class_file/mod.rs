@@ -1,6 +1,8 @@
 use crate::class_file::reader::Reader;
 
 pub mod reader;
+pub mod constant_pool;
+pub mod constant_info;
 
 struct ClassFile{
     magic:u32,
@@ -20,6 +22,23 @@ impl ClassFile{
         let mut reader = Reader::new(class_data);
         let magic = ClassFile::read_and_check_magic(&mut reader);
         let (minor_version,major_version) = ClassFile::read_and_check_version(&mut reader);
+        let access_flags = reader.read_uint16();
+        let this_class = reader.read_uint16();
+        let super_class = reader.read_uint16();
+        //let interfaces = ClassFile::read_interfaces(&mut reader);
+        //let fields = ClassFile::read_members(&mut reader);
+        //let methods = ClassFile::read_members(&mut reader);
+        //let attributes = ClassFile::read_attributes(&mut reader);
+        ClassFile{
+            magic,
+            minor_version,
+            major_version,
+            access_flags,
+            this_class,
+            super_class,
+            interfaces: vec![],
+        }
+
     }
     fn read_and_check_magic(reader:&mut Reader)->u32{
         let magic = reader.read_uint32();
@@ -37,5 +56,8 @@ impl ClassFile{
             }
         }
         panic!("java.lang.UnsupportedClassVersionError!");
+    }
+    fn read_constant_pool(reader:&mut Reader){
+
     }
 }
