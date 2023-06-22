@@ -1,27 +1,29 @@
+use crate::class_file::constant_pool::ConstantPool;
 use crate::class_file::reader::Reader;
 
 pub mod reader;
 pub mod constant_pool;
 pub mod constant_info;
 
-struct ClassFile{
-    magic:u32,
-    minor_version:u16,
-    major_version:u16,
-    //constant_pool:ConstantPoll,
-    access_flags:u16,
-    this_class:u16,
-    super_class:u16,
-    interfaces:Vec<u16>,
-    //fields:Vec<Box<MemberInfo>>,
-    //methods:Vec<Box<MemberInfo>>,
-    //attributes:Vec<Box<Attribute>>
+pub struct ClassFile{
+    pub magic:u32,
+    pub minor_version:u16,
+    pub major_version:u16,
+    pub constant_pool:ConstantPool,
+    pub access_flags:u16,
+    pub this_class:u16,
+    pub super_class:u16,
+    pub interfaces:Vec<u16>,
+    //pub fields:Vec<Box<MemberInfo>>,
+    //pub methods:Vec<Box<MemberInfo>>,
+    //pub attributes:Vec<Box<Attribute>>
 }
 impl ClassFile{
-    fn parse(class_data:Vec<u8>)->ClassFile{
+    pub(crate) fn parse(class_data:Vec<u8>) ->ClassFile{
         let mut reader = Reader::new(class_data);
         let magic = ClassFile::read_and_check_magic(&mut reader);
         let (minor_version,major_version) = ClassFile::read_and_check_version(&mut reader);
+        let constant_pool = ConstantPool::read_constant_pool(&mut reader);
         let access_flags = reader.read_uint16();
         let this_class = reader.read_uint16();
         let super_class = reader.read_uint16();
@@ -33,6 +35,7 @@ impl ClassFile{
             magic,
             minor_version,
             major_version,
+            constant_pool,
             access_flags,
             this_class,
             super_class,

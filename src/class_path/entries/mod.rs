@@ -1,4 +1,3 @@
-use std::path::MAIN_SEPARATOR;
 use crate::class_path::entries::composite_entry::CompositeEntry;
 use crate::class_path::entries::dir_entry::DirEntry;
 use crate::class_path::entries::wildcard_entry::WildcardEntry;

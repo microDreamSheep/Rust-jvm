@@ -1,11 +1,8 @@
 extern crate core;
 
-
+use crate::class_file::ClassFile;
 use std::borrow::Borrow;
 use std::env;
-use std::fs::File;
-use std::io::{Read, Write};
-use crate::class_file::reader::Reader;
 use crate::class_path::parse;
 use crate::cmd::Environment;
 
@@ -29,12 +26,17 @@ fn main() {
 }
 fn start(env:Environment){
     let class_path = parse(env);
-    let (mut data,e) = class_path.read_class("java/lang/String.class");
-    println!("{},{},{}",data.get(0).unwrap(),data.get(1).unwrap(),data.get(2).unwrap());
-    let mut reader = Reader{
-        data,
-        pointer: 0,
-    };
-    println!("{:?}", reader.read_bytes(3));
-    println!("{:?}", reader.read_bytes(1));
+    let (mut data,_) = class_path.read_class("java/lang/String.class");
+    let class_file = ClassFile::parse(data);
+    println!("magic:{}",class_file.magic);
+    println!("minor_version:{}",class_file.minor_version);
+    println!("major_version:{}",class_file.major_version);
+    println!("constant_pool_count:{}",class_file.constant_pool.constant_pool.len());
+    //获取常量池
+    for i in 1..class_file.constant_pool.constant_pool.len(){
+        println!("constant_pool[{}]:{:?}",i,class_file.constant_pool.constant_pool[i].to_string());
+    }
+    println!("access_flags:{}",class_file.access_flags);
+    println!("this_class:{}",class_file.this_class);
+    println!("super_class:{}",class_file.super_class);
 }
