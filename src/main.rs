@@ -1,8 +1,8 @@
 extern crate core;
 
 use crate::class_file::ClassFile;
-use std::borrow::Borrow;
 use std::env;
+use std::ops::Deref;
 use crate::class_path::parse;
 use crate::cmd::Environment;
 
@@ -31,10 +31,11 @@ fn start(env:Environment){
     println!("magic:{}",class_file.magic);
     println!("minor_version:{}",class_file.minor_version);
     println!("major_version:{}",class_file.major_version);
-    println!("constant_pool_count:{}",class_file.constant_pool.constant_pool.len());
     //获取常量池
-    for i in 1..class_file.constant_pool.constant_pool.len(){
-        println!("constant_pool[{}]:{:?}",i,class_file.constant_pool.constant_pool[i].to_string());
+    let mut constant = class_file.constant_pool.deref().borrow();
+    println!("constant_pool_count:{}",constant.constant_pool.len());
+    for i in 0..constant.constant_pool.len()-1{
+        println!("constant_pool[{}]:{:?}",i,constant.constant_pool[i].to_string());
     }
     println!("access_flags:{}",class_file.access_flags);
     println!("this_class:{}",class_file.this_class);

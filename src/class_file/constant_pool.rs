@@ -1,3 +1,5 @@
+use std::cell::RefCell;
+use std::rc::Rc;
 use crate::class_file::constant_info;
 use crate::class_file::constant_info::ConstantInfo;
 use crate::class_file::reader::Reader;
@@ -11,21 +13,22 @@ impl ConstantPool{
             constant_pool:vec![],
         }
     }
-    pub fn read_constant_pool(reader:&mut Reader)->ConstantPool{
+    pub fn read_constant_pool(reader:&mut Reader)->Rc<RefCell<ConstantPool>>{
         let constant_pool_count = reader.read_uint16();
-        let mut constant_pool = vec![];
-        let mut pool = ConstantPool{
+        let constant_pool = vec![];
+        let pool = ConstantPool{
             constant_pool
         };
-        for _ in 1..constant_pool_count{
-            pool.constant_pool.push(ConstantPool::read_constant_info(reader,&pool));
+        let mut arc = Rc::new(RefCell::new(pool));
+        for _ in 1..constant_pool_count-1{
+            arc.borrow_mut().constant_pool.push(ConstantPool::read_constant_info(reader,&arc));
         }
-        pool
+        arc
     }
-    fn read_constant_info(reader:&mut Reader,cp:&ConstantPool)->Box<dyn ConstantInfo>{
+    fn read_constant_info(reader:&mut Reader, cp: &Rc<RefCell<ConstantPool>>) ->Box<dyn ConstantInfo>{
         let key = reader.read_uint8();
-        let mut constant_info = constant_info::CONSTANT_INFO_MAPPER.get(&key).unwrap().new();
-        constant_info.read_info(reader,cp);
+        let mut constant_info = constant_info::get(&key,cp);
+        constant_info.read_info(reader);
         constant_info
     }
     pub(crate) fn get(&self, index: &u16) ->&Box<dyn ConstantInfo>{

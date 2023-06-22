@@ -1,19 +1,18 @@
 use std::any::Any;
-use std::collections::HashMap;
+use std::cell::RefCell;
 use std::ops::Deref;
+use std::rc::Rc;
 use crate::class_file::reader::Reader;
 use crate::class_file::constant_pool::ConstantPool;
 
 pub trait ConstantInfo {
-    fn read_info(&mut self,reader:&mut Reader,constant_pool:&ConstantPool);
-    fn new(&self)->Box<dyn ConstantInfo>;
+    fn read_info( &mut self, reader: &mut Reader);
+    fn new(cp:&Rc<RefCell<ConstantPool>>)->Box<dyn ConstantInfo> where Self: Sized;
     fn to_string(&self)->String;
     fn as_any(&self)->&dyn Any;
 }
 
-const NULL_CP: ConstantPool = ConstantPool{
-    constant_pool:vec![],
-};
+const NULL_CP: ConstantPool = ConstantPool { constant_pool: vec![],};
 
 /**
 Integer常量
@@ -22,10 +21,10 @@ pub struct ConstantIntegerInfo {
     pub val:i32,
 }
 impl ConstantInfo for ConstantIntegerInfo{
-    fn read_info(&mut self, reader: &mut Reader,_:&ConstantPool) {
+    fn read_info(&mut self, reader: &mut Reader) {
         self.val = reader.read_uint32() as i32;
     }
-    fn new(&self) -> Box<dyn ConstantInfo> {
+    fn new(_:&Rc<RefCell<ConstantPool>>) -> Box<dyn ConstantInfo> {
         Box::new(ConstantIntegerInfo{
             val:0,
         })
@@ -46,10 +45,10 @@ pub struct ConstantFloatInfo {
     pub val:f32,
 }
 impl ConstantInfo for ConstantFloatInfo{
-    fn read_info(&mut self, reader: &mut Reader,_:&ConstantPool) {
+    fn read_info(&mut self, reader: &mut Reader) {
         self.val = reader.read_uint32() as f32;
     }
-    fn new(&self) -> Box<dyn ConstantInfo> {
+    fn new(_:&Rc<RefCell<ConstantPool>>) -> Box<dyn ConstantInfo> {
         Box::new(ConstantFloatInfo{
             val:0.0,
         })
@@ -70,10 +69,10 @@ pub struct ConstantLongInfo {
     pub val:i64,
 }
 impl ConstantInfo for ConstantLongInfo{
-    fn read_info(&mut self, reader: &mut Reader,_:&ConstantPool) {
+    fn read_info(&mut self, reader: &mut Reader) {
         self.val = reader.read_uint64() as i64;
     }
-    fn new(&self) -> Box<dyn ConstantInfo> {
+    fn new(_:&Rc<RefCell<ConstantPool>>) -> Box<dyn ConstantInfo> {
         Box::new(ConstantLongInfo{
             val:0,
         })
@@ -94,10 +93,10 @@ pub struct ConstantDoubleInfo {
     pub val:f64,
 }
 impl ConstantInfo for ConstantDoubleInfo{
-    fn read_info(&mut self, reader: &mut Reader,_:&ConstantPool) {
+    fn read_info(&mut self, reader: &mut Reader) {
         self.val = reader.read_uint64() as f64;
     }
-    fn new(&self) -> Box<dyn ConstantInfo> {
+    fn new(_:&Rc<RefCell<ConstantPool>>) -> Box<dyn ConstantInfo> {
         Box::new(ConstantDoubleInfo{
             val:0.0,
         })
@@ -118,7 +117,7 @@ pub struct ConstantUtf8Info {
     pub val:String,
 }
 impl ConstantInfo for ConstantUtf8Info{
-    fn read_info(&mut self, reader: &mut Reader,_:&ConstantPool) {
+    fn read_info(&mut self, reader: &mut Reader) {
         let length = reader.read_uint16();
         let mut bytes = vec![];
         for _ in 0..length{
@@ -126,7 +125,7 @@ impl ConstantInfo for ConstantUtf8Info{
         }
         self.val = String::from_utf8(bytes).unwrap();
     }
-    fn new(&self) -> Box<dyn ConstantInfo> {
+    fn new(_:&Rc<RefCell<ConstantPool>>) -> Box<dyn ConstantInfo> {
         Box::new(ConstantUtf8Info{
             val:String::new(),
         })
@@ -143,52 +142,52 @@ impl ConstantInfo for ConstantUtf8Info{
 /**
  String常量
  */
-pub struct ConstantStringInfo<'a> {
+pub struct ConstantStringInfo {
     pub string_index: u16,
-    pub cp: &'a ConstantPool,
+    pub cp:  Rc<RefCell<ConstantPool>>,
 }
-impl ConstantInfo for ConstantStringInfo<'_>{
-    fn read_info(&mut self, reader: &mut Reader,constant_pool:&ConstantPool) {
+impl ConstantInfo for ConstantStringInfo{
+    fn read_info(&mut self, reader: &mut Reader) {
         self.string_index = reader.read_uint16();
-        self.cp = constant_pool;
     }
-    fn new(&self) -> Box<dyn ConstantInfo> {
+    fn new(cp:&Rc<RefCell<ConstantPool>>) -> Box<dyn ConstantInfo> {
         Box::new(ConstantStringInfo{
             string_index:0,
-            cp: &NULL_CP,
+            cp: Rc::clone(cp),
         })
     }
 
     fn to_string(&self) -> String {
-        "ConstantStringInfo:".to_owned()+&self.get_value()
+        "ConstantStringInfo:# ".to_owned()+ &*self.string_index.to_string() +"  "+&self.get_value()
     }
 
     fn as_any(&self) -> &dyn Any {
         self
     }
 }
-impl ConstantStringInfo<'_> {
+impl ConstantStringInfo {
     fn get_value(&self) ->String{
-        let constant_info = self.cp.get(&self.string_index);
+        let binding = self.cp.deref().borrow();
+        let constant_info = binding.get(&self.string_index);
         constant_info.as_any().downcast_ref::<ConstantUtf8Info>().unwrap().val.clone()
     }
 }
+
 /**
  Class常量
  */
-pub struct ConstantClassInfo<'a> {
+pub struct ConstantClassInfo {
     pub name_index:u16,
-    pub cp:&'a ConstantPool,
+    pub cp:Rc<RefCell<ConstantPool>>,
 }
-impl ConstantInfo for ConstantClassInfo<'_>{
-    fn read_info(&mut self, reader: &mut Reader,constant_pool:&ConstantPool) {
+impl ConstantInfo for ConstantClassInfo{
+    fn read_info(&mut self, reader: &mut Reader) {
         self.name_index = reader.read_uint16();
-        self.cp = constant_pool;
     }
-    fn new(&self) -> Box<dyn ConstantInfo> {
+    fn new(constant_pool:&Rc<RefCell<ConstantPool>>) -> Box<dyn ConstantInfo> {
         Box::new(ConstantClassInfo{
             name_index:0,
-            cp: &NULL_CP,
+            cp: Rc::clone(constant_pool)
         })
     }
 
@@ -200,31 +199,31 @@ impl ConstantInfo for ConstantClassInfo<'_>{
         self
     }
 }
-impl ConstantClassInfo<'_> {
+impl ConstantClassInfo {
     fn get_name(&self) ->String{
-        let constant_info = self.cp.get(&self.name_index);
+        let binding = self.cp.deref().borrow();
+        let constant_info = binding.get(&self.name_index);
         constant_info.as_any().downcast_ref::<ConstantUtf8Info>().unwrap().val.clone()
     }
 }
 /**
  NameAndType常量
  */
-pub struct ConstantNameAndTypeInfo<'a> {
+pub struct ConstantNameAndTypeInfo{
     pub name_index:u16,
     pub descriptor_index:u16,
-    pub cp:&'a ConstantPool,
+    pub cp: Rc<RefCell<ConstantPool>>,
 }
-impl ConstantInfo for ConstantNameAndTypeInfo<'_>{
-    fn read_info(&mut self, reader: &mut Reader,constant_pool:&ConstantPool) {
+impl ConstantInfo for ConstantNameAndTypeInfo{
+    fn read_info(&mut self, reader: &mut Reader) {
         self.name_index = reader.read_uint16();
         self.descriptor_index = reader.read_uint16();
-        self.cp = constant_pool;
     }
-    fn new(&self) -> Box<dyn ConstantInfo> {
+    fn new(constant_pool:&Rc<RefCell<ConstantPool>>) -> Box<dyn ConstantInfo> {
         Box::new(ConstantNameAndTypeInfo{
             name_index:0,
             descriptor_index:0,
-            cp: &NULL_CP,
+            cp: Rc::clone(constant_pool),
         })
     }
 
@@ -236,35 +235,36 @@ impl ConstantInfo for ConstantNameAndTypeInfo<'_>{
         self
     }
 }
-impl ConstantNameAndTypeInfo<'_> {
+impl ConstantNameAndTypeInfo {
     fn get_name(&self) ->String{
-        let constant_info = self.cp.get(&self.name_index);
+        let binding = self.cp.deref().borrow();
+        let constant_info = binding.get(&self.name_index);
         constant_info.as_any().downcast_ref::<ConstantUtf8Info>().unwrap().val.clone()
     }
     fn get_descriptor(&self) ->String{
-        let constant_info = self.cp.get(&self.descriptor_index);
+        let binding = self.cp.deref().borrow();
+        let constant_info = binding.get(&self.descriptor_index);
         constant_info.as_any().downcast_ref::<ConstantUtf8Info>().unwrap().val.clone()
     }
 }
 /**
  引用常量
  */
-pub struct ConstantMemberRefInfo<'a> {
+pub struct ConstantMemberRefInfo {
     pub class_index:u16,
     pub name_and_type_index:u16,
-    pub cp:&'a ConstantPool,
+    pub cp:Rc<RefCell<ConstantPool>>,
 }
-impl ConstantInfo for ConstantMemberRefInfo<'_>{
-    fn read_info(&mut self, reader: &mut Reader,constant_pool:&ConstantPool) {
+impl ConstantInfo for ConstantMemberRefInfo{
+    fn read_info(&mut self, reader: &mut Reader) {
         self.class_index = reader.read_uint16();
         self.name_and_type_index = reader.read_uint16();
-        self.cp = constant_pool;
     }
-    fn new(&self) -> Box<dyn ConstantInfo> {
+    fn new(constant_pool:&Rc<RefCell<ConstantPool>>) -> Box<dyn ConstantInfo> {
         Box::new(ConstantMemberRefInfo {
             class_index:0,
             name_and_type_index:0,
-            cp: &NULL_CP,
+            cp: Rc::clone(constant_pool),
         })
     }
 
@@ -276,13 +276,15 @@ impl ConstantInfo for ConstantMemberRefInfo<'_>{
         self
     }
 }
-impl ConstantMemberRefInfo<'_> {
+impl ConstantMemberRefInfo {
     fn get_class_name(&self) ->String{
-        let constant_info = self.cp.get(&self.class_index);
+        let binding = self.cp.deref().borrow();
+        let constant_info = binding.get(&self.class_index);
         constant_info.as_any().downcast_ref::<ConstantClassInfo>().unwrap().get_name()
     }
     fn get_name_and_descriptor(&self) ->(String,String){
-        let constant_info = self.cp.get(&self.name_and_type_index);
+        let binding = self.cp.deref().borrow();
+        let constant_info = binding.get(&(self.name_and_type_index - 1));
         let constant_name_and_type_info = constant_info.as_any().downcast_ref::<ConstantNameAndTypeInfo>().unwrap();
         let name = constant_name_and_type_info.get_name();
         let descriptor = constant_name_and_type_info.get_descriptor();
@@ -292,19 +294,19 @@ impl ConstantMemberRefInfo<'_> {
 /**
  MethodRef常量
  */
-pub struct ConstantMethodRefInfo<'a> {
-    pub ref_info: ConstantMemberRefInfo<'a>,
+pub struct ConstantMethodRefInfo {
+    pub ref_info: ConstantMemberRefInfo,
 }
-impl ConstantInfo for ConstantMethodRefInfo<'_>{
-    fn read_info(&mut self, reader: &mut Reader,cp:&ConstantPool) {
-        self.ref_info.read_info(reader,cp);
+impl ConstantInfo for ConstantMethodRefInfo{
+    fn read_info(&mut self, reader: &mut Reader) {
+        self.ref_info.read_info(reader);
     }
-    fn new(&self) -> Box<dyn ConstantInfo> {
+    fn new(constant_pool:&Rc<RefCell<ConstantPool>>) -> Box<dyn ConstantInfo> {
         Box::new(ConstantMethodRefInfo {
             ref_info: ConstantMemberRefInfo {
                 class_index:0,
                 name_and_type_index:0,
-                cp: &NULL_CP,
+                cp: Rc::clone(constant_pool),
             },
         })
     }
@@ -317,7 +319,7 @@ impl ConstantInfo for ConstantMethodRefInfo<'_>{
         self
     }
 }
-impl ConstantMethodRefInfo<'_> {
+impl ConstantMethodRefInfo {
     pub fn get_class_name(&self) ->String{
         self.ref_info.get_class_name()
     }
@@ -328,19 +330,19 @@ impl ConstantMethodRefInfo<'_> {
 /**
  FieldRef常量
  */
-pub struct ConstantFieldRefInfo<'a> {
-    pub ref_info: ConstantMemberRefInfo<'a>,
+pub struct ConstantFieldRefInfo {
+    pub ref_info: ConstantMemberRefInfo,
 }
-impl ConstantInfo for ConstantFieldRefInfo<'_> {
-    fn read_info(&mut self, reader: &mut Reader,cp:&ConstantPool) {
-        self.ref_info.read_info(reader,cp);
+impl ConstantInfo for ConstantFieldRefInfo{
+    fn read_info(&mut self, reader: &mut Reader) {
+        self.ref_info.read_info(reader);
     }
-    fn new(&self) -> Box<dyn ConstantInfo> {
+    fn new(constant_pool:&Rc<RefCell<ConstantPool>>) -> Box<dyn ConstantInfo> {
         Box::new(ConstantFieldRefInfo {
             ref_info: ConstantMemberRefInfo {
                 class_index:0,
                 name_and_type_index:0,
-                cp: &NULL_CP,
+                cp: Rc::clone(constant_pool),
             },
         })
     }
@@ -353,7 +355,7 @@ impl ConstantInfo for ConstantFieldRefInfo<'_> {
         self
     }
 }
-impl ConstantFieldRefInfo<'_> {
+impl ConstantFieldRefInfo {
     pub fn get_class_name(&self) ->String{
         self.ref_info.get_class_name()
     }
@@ -364,19 +366,19 @@ impl ConstantFieldRefInfo<'_> {
 /**
  InterfaceMethodRef常量
  */
-pub struct ConstantInterfaceMethodRefInfo<'a> {
-    pub ref_info: ConstantMemberRefInfo<'a>,
+pub struct ConstantInterfaceMethodRefInfo{
+    pub ref_info: ConstantMemberRefInfo,
 }
-impl ConstantInfo for ConstantInterfaceMethodRefInfo<'_> {
-    fn read_info(&mut self, reader: &mut Reader,cp:&ConstantPool) {
-        self.ref_info.read_info(reader,cp);
+impl ConstantInfo for ConstantInterfaceMethodRefInfo {
+    fn read_info(&mut self, reader: &mut Reader){
+        self.ref_info.read_info(reader);
     }
-    fn new(&self) -> Box<dyn ConstantInfo> {
+    fn new(constant_pool:&Rc<RefCell<ConstantPool>>) -> Box<dyn ConstantInfo> {
         Box::new(ConstantInterfaceMethodRefInfo {
             ref_info: ConstantMemberRefInfo {
                 class_index:0,
                 name_and_type_index:0,
-                cp: &NULL_CP,
+                cp: Rc::clone(constant_pool),
             },
         })
     }
@@ -390,7 +392,7 @@ impl ConstantInfo for ConstantInterfaceMethodRefInfo<'_> {
     }
 }
 
-impl ConstantInterfaceMethodRefInfo<'_> {
+impl ConstantInterfaceMethodRefInfo {
     pub fn get_class_name(&self) ->String{
         self.ref_info.get_class_name()
     }
@@ -399,7 +401,84 @@ impl ConstantInterfaceMethodRefInfo<'_> {
     }
 }
 
+/**
+ methodHandle常量
+ */
+pub struct ConstantMethodHandleInfo{
+    pub reference_kind: u8,
+    pub reference_index: u16,
+}
+impl ConstantInfo for ConstantMethodHandleInfo {
+    fn read_info(&mut self, reader: &mut Reader){
+        self.reference_kind = *reader.read_uint8();
+        self.reference_index = reader.read_uint16();
+    }
+    fn new(_constant_pool:&Rc<RefCell<ConstantPool>>) -> Box<dyn ConstantInfo> {
+        Box::new(ConstantMethodHandleInfo {
+            reference_kind:0,
+            reference_index:0,
+        })
+    }
 
+    fn to_string(&self) -> String {
+        "ConstantMethodHandleInfo:".to_owned()+&self.reference_kind.to_string()+":"+&self.reference_index.to_string()
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
+/**
+ methodType常量
+ */
+pub struct ConstantMethodTypeInfo{
+    pub descriptor_index: u16,
+}
+impl ConstantInfo for ConstantMethodTypeInfo {
+    fn read_info(&mut self, reader: &mut Reader){
+        self.descriptor_index = reader.read_uint16();
+    }
+    fn new(_constant_pool:&Rc<RefCell<ConstantPool>>) -> Box<dyn ConstantInfo> {
+        Box::new(ConstantMethodTypeInfo {
+            descriptor_index:0,
+        })
+    }
+
+    fn to_string(&self) -> String {
+        "ConstantMethodTypeInfo:".to_owned()+&self.descriptor_index.to_string()
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
+/**
+ invokeDynamic常量
+ */
+pub struct ConstantInvokeDynamicInfo{
+    pub bootstrap_method_attr_index: u16,
+    pub name_and_type_index: u16,
+}
+impl ConstantInfo for ConstantInvokeDynamicInfo {
+    fn read_info(&mut self, reader: &mut Reader){
+        self.bootstrap_method_attr_index = reader.read_uint16();
+        self.name_and_type_index = reader.read_uint16();
+    }
+    fn new(_constant_pool:&Rc<RefCell<ConstantPool>>) -> Box<dyn ConstantInfo> {
+        Box::new(ConstantInvokeDynamicInfo {
+            bootstrap_method_attr_index:0,
+            name_and_type_index:0,
+        })
+    }
+
+    fn to_string(&self) -> String {
+        "ConstantInvokeDynamicInfo:".to_owned()+&self.bootstrap_method_attr_index.to_string()+":"+&self.name_and_type_index.to_string()
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
 pub const CONSTANT_INTEGER:u8 = 3;
 pub const CONSTANT_FLOAT:u8 = 4;
 pub const CONSTANT_LONG:u8 = 5;
@@ -411,23 +490,29 @@ pub const CONSTANT_FIELD_REF:u8 = 9;
 pub const CONSTANT_METHOD_REF:u8 = 10;
 pub const CONSTANT_INTERFACE_METHOD_REF:u8 = 11;
 pub const CONSTANT_NAME_AND_TYPE:u8 = 12;
-//const CONSTANT_METHOD_HANDLE:u8 = 15;
-//const CONSTANT_METHOD_TYPE:u8 = 16;
-//const CONSTANT_INVOKE_DYNAMIC:u8 = 18;
+const CONSTANT_METHOD_HANDLE:u8 = 15;
+const CONSTANT_METHOD_TYPE:u8 = 16;
+const CONSTANT_INVOKE_DYNAMIC:u8 = 18;
 
+pub(crate) fn get(id: &u8, cp:&Rc<RefCell<ConstantPool>>) -> Box<dyn ConstantInfo> {
+    match *id {
+        CONSTANT_INTEGER => ConstantIntegerInfo::new(cp),
+        CONSTANT_FLOAT => ConstantFloatInfo::new(cp),
+        CONSTANT_LONG => ConstantLongInfo::new(cp),
+        CONSTANT_DOUBLE => ConstantDoubleInfo::new(cp),
+        CONSTANT_UTF8 => ConstantUtf8Info::new(cp),
+        CONSTANT_STRING => ConstantStringInfo::new(cp),
+        CONSTANT_CLASS => ConstantClassInfo::new(cp),
+        CONSTANT_FIELD_REF => ConstantFieldRefInfo::new(cp),
+        CONSTANT_METHOD_REF => ConstantMethodRefInfo::new(cp),
+        CONSTANT_INTERFACE_METHOD_REF => ConstantInterfaceMethodRefInfo::new(cp),
+        CONSTANT_NAME_AND_TYPE => ConstantNameAndTypeInfo::new(cp),
+        CONSTANT_METHOD_HANDLE => ConstantMethodHandleInfo::new(cp),
+        CONSTANT_METHOD_TYPE => ConstantMethodTypeInfo::new(cp),
+        CONSTANT_INVOKE_DYNAMIC => ConstantInvokeDynamicInfo::new(cp),
 
-pub const CONSTANT_INFO_MAPPER: HashMap<u8, Box<dyn ConstantInfo>> = {
-    let mut map:HashMap<_, Box<(dyn ConstantInfo + 'static)>> = HashMap::new();
-    map.insert(CONSTANT_INTEGER, Box::new(ConstantIntegerInfo{ val: 0 }));
-    map.insert(CONSTANT_FLOAT, Box::new(ConstantFloatInfo{ val: 0.0 }));
-    map.insert(CONSTANT_LONG, Box::new(ConstantLongInfo{ val: 0 }));
-    map.insert(CONSTANT_DOUBLE, Box::new(ConstantDoubleInfo{ val: 0.0 }));
-    map.insert(CONSTANT_UTF8, Box::new(ConstantUtf8Info{ val: "".to_owned() }));
-    map.insert(CONSTANT_STRING, Box::new(ConstantStringInfo{ string_index: 0,cp: &NULL_CP }));
-    map.insert(CONSTANT_CLASS, Box::new(ConstantClassInfo{ name_index: 0,cp: &NULL_CP }));
-    map.insert(CONSTANT_FIELD_REF, Box::new(ConstantFieldRefInfo{ ref_info: ConstantMemberRefInfo{ class_index: 0,name_and_type_index: 0,cp: &NULL_CP } }));
-    map.insert(CONSTANT_METHOD_REF, Box::new(ConstantMethodRefInfo{ ref_info: ConstantMemberRefInfo{ class_index: 0,name_and_type_index: 0,cp: &NULL_CP } }));
-    map.insert(CONSTANT_INTERFACE_METHOD_REF, Box::new(ConstantInterfaceMethodRefInfo{ ref_info: ConstantMemberRefInfo{ class_index: 0,name_and_type_index: 0,cp: &NULL_CP } }));
-    map.insert(CONSTANT_NAME_AND_TYPE, Box::new(ConstantNameAndTypeInfo{ name_index: 0,descriptor_index: 0,cp: &NULL_CP }));
-    map
-};
+        _ => {
+            panic!("java.lang.ClassFormatError: constant pool tag! id = {}",id)
+        }
+    }
+}

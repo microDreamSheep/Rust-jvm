@@ -1,3 +1,5 @@
+use std::cell::RefCell;
+use std::rc::Rc;
 use crate::class_file::constant_pool::ConstantPool;
 use crate::class_file::reader::Reader;
 
@@ -9,7 +11,7 @@ pub struct ClassFile{
     pub magic:u32,
     pub minor_version:u16,
     pub major_version:u16,
-    pub constant_pool:ConstantPool,
+    pub constant_pool:Rc<RefCell<ConstantPool>>,
     pub access_flags:u16,
     pub this_class:u16,
     pub super_class:u16,
@@ -59,8 +61,5 @@ impl ClassFile{
             }
         }
         panic!("java.lang.UnsupportedClassVersionError!");
-    }
-    fn read_constant_pool(reader:&mut Reader){
-
     }
 }
