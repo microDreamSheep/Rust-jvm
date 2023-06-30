@@ -1,7 +1,8 @@
 use std::cell::RefCell;
+use std::ops::Deref;
 use std::rc::Rc;
 use crate::class_file::constant_info;
-use crate::class_file::constant_info::ConstantInfo;
+use crate::class_file::constant_info::{ConstantInfo, ConstantInfoMeta, ConstantIntegerInfo, NullConstant};
 use crate::class_file::reader::Reader;
 
 pub struct ConstantPool{
@@ -21,15 +22,18 @@ impl ConstantPool{
         };
         let mut arc = Rc::new(RefCell::new(pool));
         for _ in 1..constant_pool_count-1{
-            arc.borrow_mut().constant_pool.push(ConstantPool::read_constant_info(reader,&arc));
+            ConstantPool::read_constant_info(reader,&arc);
         }
         arc
     }
-    fn read_constant_info(reader:&mut Reader, cp: &Rc<RefCell<ConstantPool>>) ->Box<dyn ConstantInfo>{
+    fn read_constant_info(reader:&mut Reader, cp: &Rc<RefCell<ConstantPool>>){
         let key = reader.read_uint8();
         let mut constant_info = constant_info::get(&key,cp);
-        constant_info.read_info(reader);
-        constant_info
+        let is = constant_info.read_info(reader);
+        cp.borrow_mut().constant_pool.push(constant_info);
+        if is {
+            cp.borrow_mut().constant_pool.push(Box::new(NullConstant{}))
+        }
     }
     pub(crate) fn get(&self, index: &u16) ->&Box<dyn ConstantInfo>{
         &self.constant_pool.get(*index as usize).unwrap()

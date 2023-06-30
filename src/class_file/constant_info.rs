@@ -6,14 +6,33 @@ use crate::class_file::reader::Reader;
 use crate::class_file::constant_pool::ConstantPool;
 
 pub trait ConstantInfo {
-    fn read_info( &mut self, reader: &mut Reader);
+    fn read_info( &mut self, reader: &mut Reader)->bool;
     fn new(cp:&Rc<RefCell<ConstantPool>>)->Box<dyn ConstantInfo> where Self: Sized;
     fn to_string(&self)->String;
     fn as_any(&self)->&dyn Any;
 }
 
-const NULL_CP: ConstantPool = ConstantPool { constant_pool: vec![],};
+pub struct ConstantInfoMeta{
+    pub cp:Rc<RefCell<ConstantPool>>
+}
+/**
+ 占位常量
+ */
+pub struct NullConstant{}
 
+impl ConstantInfo for NullConstant{
+    fn read_info(&mut self, _: &mut Reader) -> bool { false }
+
+    fn new(_: &Rc<RefCell<ConstantPool>>) -> Box<dyn ConstantInfo> where Self: Sized {
+        Box::new(NullConstant{})
+    }
+
+    fn to_string(&self) -> String { String::from("占位常量") }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
 /**
 Integer常量
  */
@@ -21,8 +40,9 @@ pub struct ConstantIntegerInfo {
     pub val:i32,
 }
 impl ConstantInfo for ConstantIntegerInfo{
-    fn read_info(&mut self, reader: &mut Reader) {
+    fn read_info(&mut self, reader: &mut Reader) ->bool{
         self.val = reader.read_uint32() as i32;
+        false
     }
     fn new(_:&Rc<RefCell<ConstantPool>>) -> Box<dyn ConstantInfo> {
         Box::new(ConstantIntegerInfo{
@@ -45,8 +65,9 @@ pub struct ConstantFloatInfo {
     pub val:f32,
 }
 impl ConstantInfo for ConstantFloatInfo{
-    fn read_info(&mut self, reader: &mut Reader) {
+    fn read_info(&mut self, reader: &mut Reader)->bool {
         self.val = reader.read_uint32() as f32;
+        false
     }
     fn new(_:&Rc<RefCell<ConstantPool>>) -> Box<dyn ConstantInfo> {
         Box::new(ConstantFloatInfo{
@@ -67,14 +88,17 @@ impl ConstantInfo for ConstantFloatInfo{
  */
 pub struct ConstantLongInfo {
     pub val:i64,
+    pub cp:Rc<RefCell<ConstantPool>>,
 }
 impl ConstantInfo for ConstantLongInfo{
-    fn read_info(&mut self, reader: &mut Reader) {
+    fn read_info(&mut self, reader: &mut Reader) ->bool{
         self.val = reader.read_uint64() as i64;
+        true
     }
-    fn new(_:&Rc<RefCell<ConstantPool>>) -> Box<dyn ConstantInfo> {
+    fn new(cp:&Rc<RefCell<ConstantPool>>) -> Box<dyn ConstantInfo> {
         Box::new(ConstantLongInfo{
             val:0,
+            cp:Rc::clone(cp)
         })
     }
 
@@ -91,14 +115,18 @@ impl ConstantInfo for ConstantLongInfo{
  */
 pub struct ConstantDoubleInfo {
     pub val:f64,
+    pub cp:Rc<RefCell<ConstantPool>>,
 }
 impl ConstantInfo for ConstantDoubleInfo{
-    fn read_info(&mut self, reader: &mut Reader) {
+    fn read_info(&mut self, reader: &mut Reader) ->bool{
         self.val = reader.read_uint64() as f64;
+        true
+
     }
-    fn new(_:&Rc<RefCell<ConstantPool>>) -> Box<dyn ConstantInfo> {
+    fn new(cp:&Rc<RefCell<ConstantPool>>) -> Box<dyn ConstantInfo> {
         Box::new(ConstantDoubleInfo{
             val:0.0,
+            cp: Rc::clone(cp),
         })
     }
 
@@ -117,13 +145,14 @@ pub struct ConstantUtf8Info {
     pub val:String,
 }
 impl ConstantInfo for ConstantUtf8Info{
-    fn read_info(&mut self, reader: &mut Reader) {
+    fn read_info(&mut self, reader: &mut Reader)->bool {
         let length = reader.read_uint16();
         let mut bytes = vec![];
         for _ in 0..length{
             bytes.push(reader.read_uint8().clone());
         }
         self.val = String::from_utf8(bytes).unwrap();
+        false
     }
     fn new(_:&Rc<RefCell<ConstantPool>>) -> Box<dyn ConstantInfo> {
         Box::new(ConstantUtf8Info{
@@ -147,8 +176,9 @@ pub struct ConstantStringInfo {
     pub cp:  Rc<RefCell<ConstantPool>>,
 }
 impl ConstantInfo for ConstantStringInfo{
-    fn read_info(&mut self, reader: &mut Reader) {
+    fn read_info(&mut self, reader: &mut Reader) ->bool{
         self.string_index = reader.read_uint16();
+        false
     }
     fn new(cp:&Rc<RefCell<ConstantPool>>) -> Box<dyn ConstantInfo> {
         Box::new(ConstantStringInfo{
@@ -168,7 +198,7 @@ impl ConstantInfo for ConstantStringInfo{
 impl ConstantStringInfo {
     fn get_value(&self) ->String{
         let binding = self.cp.deref().borrow();
-        let constant_info = binding.get(&self.string_index);
+        let constant_info = binding.get(&(self.string_index-1));
         constant_info.as_any().downcast_ref::<ConstantUtf8Info>().unwrap().val.clone()
     }
 }
@@ -181,8 +211,9 @@ pub struct ConstantClassInfo {
     pub cp:Rc<RefCell<ConstantPool>>,
 }
 impl ConstantInfo for ConstantClassInfo{
-    fn read_info(&mut self, reader: &mut Reader) {
+    fn read_info(&mut self, reader: &mut Reader)->bool {
         self.name_index = reader.read_uint16();
+        false
     }
     fn new(constant_pool:&Rc<RefCell<ConstantPool>>) -> Box<dyn ConstantInfo> {
         Box::new(ConstantClassInfo{
@@ -200,9 +231,9 @@ impl ConstantInfo for ConstantClassInfo{
     }
 }
 impl ConstantClassInfo {
-    fn get_name(&self) ->String{
+    pub(crate) fn get_name(&self) ->String{
         let binding = self.cp.deref().borrow();
-        let constant_info = binding.get(&self.name_index);
+        let constant_info = binding.get(&(self.name_index-1));
         constant_info.as_any().downcast_ref::<ConstantUtf8Info>().unwrap().val.clone()
     }
 }
@@ -215,9 +246,10 @@ pub struct ConstantNameAndTypeInfo{
     pub cp: Rc<RefCell<ConstantPool>>,
 }
 impl ConstantInfo for ConstantNameAndTypeInfo{
-    fn read_info(&mut self, reader: &mut Reader) {
+    fn read_info(&mut self, reader: &mut Reader)->bool {
         self.name_index = reader.read_uint16();
         self.descriptor_index = reader.read_uint16();
+        false
     }
     fn new(constant_pool:&Rc<RefCell<ConstantPool>>) -> Box<dyn ConstantInfo> {
         Box::new(ConstantNameAndTypeInfo{
@@ -238,12 +270,12 @@ impl ConstantInfo for ConstantNameAndTypeInfo{
 impl ConstantNameAndTypeInfo {
     fn get_name(&self) ->String{
         let binding = self.cp.deref().borrow();
-        let constant_info = binding.get(&self.name_index);
+        let constant_info = binding.get(&(self.name_index-1));
         constant_info.as_any().downcast_ref::<ConstantUtf8Info>().unwrap().val.clone()
     }
     fn get_descriptor(&self) ->String{
         let binding = self.cp.deref().borrow();
-        let constant_info = binding.get(&self.descriptor_index);
+        let constant_info = binding.get(&(self.descriptor_index-1));
         constant_info.as_any().downcast_ref::<ConstantUtf8Info>().unwrap().val.clone()
     }
 }
@@ -256,9 +288,10 @@ pub struct ConstantMemberRefInfo {
     pub cp:Rc<RefCell<ConstantPool>>,
 }
 impl ConstantInfo for ConstantMemberRefInfo{
-    fn read_info(&mut self, reader: &mut Reader) {
+    fn read_info(&mut self, reader: &mut Reader)->bool {
         self.class_index = reader.read_uint16();
         self.name_and_type_index = reader.read_uint16();
+        false
     }
     fn new(constant_pool:&Rc<RefCell<ConstantPool>>) -> Box<dyn ConstantInfo> {
         Box::new(ConstantMemberRefInfo {
@@ -279,7 +312,7 @@ impl ConstantInfo for ConstantMemberRefInfo{
 impl ConstantMemberRefInfo {
     fn get_class_name(&self) ->String{
         let binding = self.cp.deref().borrow();
-        let constant_info = binding.get(&self.class_index);
+        let constant_info = binding.get(&(self.class_index-1));
         constant_info.as_any().downcast_ref::<ConstantClassInfo>().unwrap().get_name()
     }
     fn get_name_and_descriptor(&self) ->(String,String){
@@ -298,8 +331,9 @@ pub struct ConstantMethodRefInfo {
     pub ref_info: ConstantMemberRefInfo,
 }
 impl ConstantInfo for ConstantMethodRefInfo{
-    fn read_info(&mut self, reader: &mut Reader) {
+    fn read_info(&mut self, reader: &mut Reader)->bool {
         self.ref_info.read_info(reader);
+        false
     }
     fn new(constant_pool:&Rc<RefCell<ConstantPool>>) -> Box<dyn ConstantInfo> {
         Box::new(ConstantMethodRefInfo {
@@ -334,8 +368,9 @@ pub struct ConstantFieldRefInfo {
     pub ref_info: ConstantMemberRefInfo,
 }
 impl ConstantInfo for ConstantFieldRefInfo{
-    fn read_info(&mut self, reader: &mut Reader) {
+    fn read_info(&mut self, reader: &mut Reader)->bool {
         self.ref_info.read_info(reader);
+        false
     }
     fn new(constant_pool:&Rc<RefCell<ConstantPool>>) -> Box<dyn ConstantInfo> {
         Box::new(ConstantFieldRefInfo {
@@ -370,8 +405,9 @@ pub struct ConstantInterfaceMethodRefInfo{
     pub ref_info: ConstantMemberRefInfo,
 }
 impl ConstantInfo for ConstantInterfaceMethodRefInfo {
-    fn read_info(&mut self, reader: &mut Reader){
+    fn read_info(&mut self, reader: &mut Reader)->bool{
         self.ref_info.read_info(reader);
+        false
     }
     fn new(constant_pool:&Rc<RefCell<ConstantPool>>) -> Box<dyn ConstantInfo> {
         Box::new(ConstantInterfaceMethodRefInfo {
@@ -409,9 +445,10 @@ pub struct ConstantMethodHandleInfo{
     pub reference_index: u16,
 }
 impl ConstantInfo for ConstantMethodHandleInfo {
-    fn read_info(&mut self, reader: &mut Reader){
+    fn read_info(&mut self, reader: &mut Reader)->bool{
         self.reference_kind = *reader.read_uint8();
         self.reference_index = reader.read_uint16();
+        false
     }
     fn new(_constant_pool:&Rc<RefCell<ConstantPool>>) -> Box<dyn ConstantInfo> {
         Box::new(ConstantMethodHandleInfo {
@@ -435,8 +472,9 @@ pub struct ConstantMethodTypeInfo{
     pub descriptor_index: u16,
 }
 impl ConstantInfo for ConstantMethodTypeInfo {
-    fn read_info(&mut self, reader: &mut Reader){
+    fn read_info(&mut self, reader: &mut Reader)->bool{
         self.descriptor_index = reader.read_uint16();
+        false
     }
     fn new(_constant_pool:&Rc<RefCell<ConstantPool>>) -> Box<dyn ConstantInfo> {
         Box::new(ConstantMethodTypeInfo {
@@ -460,9 +498,10 @@ pub struct ConstantInvokeDynamicInfo{
     pub name_and_type_index: u16,
 }
 impl ConstantInfo for ConstantInvokeDynamicInfo {
-    fn read_info(&mut self, reader: &mut Reader){
+    fn read_info(&mut self, reader: &mut Reader)->bool{
         self.bootstrap_method_attr_index = reader.read_uint16();
         self.name_and_type_index = reader.read_uint16();
+        false
     }
     fn new(_constant_pool:&Rc<RefCell<ConstantPool>>) -> Box<dyn ConstantInfo> {
         Box::new(ConstantInvokeDynamicInfo {
