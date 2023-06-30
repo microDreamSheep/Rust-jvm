@@ -1,4 +1,5 @@
 use std::cell::RefCell;
+use std::fs::read;
 use std::rc::Rc;
 use crate::class_file::constant_pool::ConstantPool;
 use crate::class_file::reader::Reader;
@@ -29,7 +30,7 @@ impl ClassFile{
         let access_flags = reader.read_uint16();
         let this_class = reader.read_uint16();
         let super_class = reader.read_uint16();
-        //let interfaces = ClassFile::read_interfaces(&mut reader);
+        let interfaces = ClassFile::read_interfaces(&mut reader);
         //let fields = ClassFile::read_members(&mut reader);
         //let methods = ClassFile::read_members(&mut reader);
         //let attributes = ClassFile::read_attributes(&mut reader);
@@ -41,7 +42,7 @@ impl ClassFile{
             access_flags,
             this_class,
             super_class,
-            interfaces: vec![],
+            interfaces,
         }
 
     }
@@ -61,5 +62,13 @@ impl ClassFile{
             }
         }
         panic!("java.lang.UnsupportedClassVersionError!");
+    }
+    fn read_interfaces(reader:&mut Reader) -> Vec<u16>{
+        let mut result = Vec::new();
+        let count = reader.read_uint16();
+        for _ in 1..count-1 {
+            result.push(reader.read_uint16());
+        }
+        result
     }
 }

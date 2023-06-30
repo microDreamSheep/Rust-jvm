@@ -1,8 +1,7 @@
 use std::cell::RefCell;
-use std::ops::Deref;
 use std::rc::Rc;
 use crate::class_file::constant_info;
-use crate::class_file::constant_info::{ConstantInfo, ConstantInfoMeta, ConstantIntegerInfo, NullConstant};
+use crate::class_file::constant_info::{ConstantInfo, NullConstant};
 use crate::class_file::reader::Reader;
 
 pub struct ConstantPool{
@@ -16,11 +15,8 @@ impl ConstantPool{
     }
     pub fn read_constant_pool(reader:&mut Reader)->Rc<RefCell<ConstantPool>>{
         let constant_pool_count = reader.read_uint16();
-        let constant_pool = vec![];
-        let pool = ConstantPool{
-            constant_pool
-        };
-        let mut arc = Rc::new(RefCell::new(pool));
+        let pool = ConstantPool::new();
+        let arc = Rc::new(RefCell::new(pool));
         for _ in 1..constant_pool_count-1{
             ConstantPool::read_constant_info(reader,&arc);
         }

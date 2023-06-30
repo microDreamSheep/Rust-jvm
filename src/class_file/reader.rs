@@ -46,10 +46,10 @@ impl Reader {
         data
     }
     fn _read_uint16s(){}
-    pub fn read_bytes(&mut self, size:usize)->Vec<u8>{
+    pub fn _read_bytes(&mut self, size:usize)->Vec<u8>{
         let mut vec:Vec<u8> = Vec::new();
         for i in 0..size {
-            vec.push(self.data.get(self.pointer+i).unwrap().clone() as u8);
+            vec.push(self.data.get(self.pointer+i).unwrap().clone());
         }
         self.pointer+=size;
         vec
