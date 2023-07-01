@@ -21,9 +21,8 @@ impl Attribute {
 }
 pub fn get_attributes(reader: &mut Reader, cp:&Rc<RefCell<ConstantPool>>) ->Box<dyn AttributeInfo>{
     let name_index = reader.read_uint16();
-    println!("name_index:{}",name_index);
     let name = cp.borrow().get_utf8(&name_index);
-    let mut attribute = get_attribute_info(name, reader, cp);
+    let attribute = get_attribute_info(name, reader, cp);
     attribute
 }
 fn get_attribute_info(name:String, reader:&mut Reader, cp:&Rc<RefCell<ConstantPool>>) ->Box<dyn AttributeInfo>{
@@ -210,7 +209,12 @@ pub struct ExceptionTableEntry{
     pub catch_type:u16,
 }
 impl ExceptionTableEntry{
-    pub fn new(start_pc:u16,end_pc:u16,handler_pc:u16,catch_type:u16)->ExceptionTableEntry{
+
+    pub fn new(reader:&mut Reader)->ExceptionTableEntry{
+        let start_pc = reader.read_uint16();
+        let end_pc = reader.read_uint16();
+        let handler_pc = reader.read_uint16();
+        let catch_type = reader.read_uint16();
         ExceptionTableEntry{
             start_pc,
             end_pc,
@@ -228,7 +232,7 @@ pub struct CodeAttribute{
     pub max_stack:u16,
     pub max_locals:u16,
     pub code:Vec<u8>,
-    //pub exception_table:Vec<ExceptionTableEntry>,
+    pub exception_table:Vec<ExceptionTableEntry>,
     pub attributes:Vec<Box<dyn AttributeInfo>>,
     pub cp:Rc<RefCell<ConstantPool>>,
 }
@@ -240,18 +244,18 @@ impl AttributeInfo for CodeAttribute{
         let code_length = reader.read_uint32();
         let code = reader.read_bytes(code_length as usize);
 
-        /*let exception_table_length = reader.read_uint16();
+        let exception_table_length = reader.read_uint16();
         let mut exception_table:Vec<ExceptionTableEntry> = Vec::with_capacity(exception_table_length as usize);
         for _ in 0..exception_table_length{
             exception_table.push(ExceptionTableEntry::new(reader));
-        }*/
+        }
         let attributes = Attribute::read_attributes(reader,Rc::clone(cp));
         Box::new(CodeAttribute{
             name,
             max_stack,
             max_locals,
             code,
-            //exception_table,
+            exception_table,
             attributes,
             cp:Rc::clone(cp),
         })

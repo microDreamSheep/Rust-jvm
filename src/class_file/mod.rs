@@ -1,14 +1,17 @@
 use std::cell::RefCell;
-use std::fs::read;
 use std::rc::Rc;
-use crate::class_file::attribute::Attribute;
+use crate::class_file::attribute::{Attribute, AttributeInfo};
 use crate::class_file::constant_pool::ConstantPool;
 use crate::class_file::reader::Reader;
+use crate::class_file::field::MemberInfo;
+use crate::class_file::method::MethodInfo;
 
 pub mod reader;
 pub mod constant_pool;
 pub mod constant_info;
 pub mod attribute;
+pub mod field;
+pub mod method;
 
 pub struct ClassFile{
     pub magic:u32,
@@ -19,9 +22,9 @@ pub struct ClassFile{
     pub this_class:u16,
     pub super_class:u16,
     pub interfaces:Vec<u16>,
-    //pub fields:Vec<Box<MemberInfo>>,
-    //pub methods:Vec<Box<MemberInfo>>,
-    //pub attributes:Vec<Box<Attribute>>
+    pub fields:Vec<Box<MemberInfo>>,
+    pub methods:Vec<Box<MethodInfo>>,
+    pub attributes:Vec<Box<dyn AttributeInfo>>
 }
 
 impl ClassFile{
@@ -34,9 +37,9 @@ impl ClassFile{
         let this_class = reader.read_uint16();
         let super_class = reader.read_uint16();
         let interfaces = ClassFile::read_interfaces(&mut reader);
-        //let fields = ClassFile::read_members(&mut reader);
-        //let methods = ClassFile::read_members(&mut reader);
-        let _ = Attribute::read_attributes(&mut reader,Rc::clone(&constant_pool));
+        let fields = MemberInfo::read_members(&mut reader,Rc::clone(&constant_pool));
+        let methods = MethodInfo::read_methods(&mut reader,Rc::clone(&constant_pool));
+        let attributes = Attribute::read_attributes(&mut reader,Rc::clone(&constant_pool));
         ClassFile{
             magic,
             minor_version,
@@ -46,6 +49,9 @@ impl ClassFile{
             this_class,
             super_class,
             interfaces,
+            fields,
+            methods,
+            attributes
         }
 
     }

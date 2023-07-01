@@ -1,5 +1,4 @@
 use std::cell::RefCell;
-use std::ops::Deref;
 use std::rc::Rc;
 use crate::class_file::constant_info;
 use crate::class_file::constant_info::{ConstantInfo, ConstantUtf8Info, NullConstant};
