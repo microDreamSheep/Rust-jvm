@@ -14,19 +14,19 @@ pub struct MemberInfo {
 impl MemberInfo{
     pub(crate) fn read_members(reader: &mut Reader, cp: Rc<RefCell<ConstantPool>>) -> Vec<Box<MemberInfo>> {
         let member_count = reader.read_uint16();
-        let mut members = vec![];
+        let mut members = Vec::new();
         for _ in 0..member_count {
-            members.push(MemberInfo::read_member(reader, &cp));
+            members.push(MemberInfo::read_member(reader, Rc::clone(&cp)));
         }
         members
     }
-    fn read_member(reader: &mut Reader, cp: &Rc<RefCell<ConstantPool>>) -> Box<MemberInfo> {
+    fn read_member(reader: &mut Reader, cp: Rc<RefCell<ConstantPool>>) -> Box<MemberInfo> {
         let access_flags = reader.read_uint16();
         let name_index = reader.read_uint16();
         let descriptor_index = reader.read_uint16();
-        let attributes = Attribute::read_attributes(reader, Rc::clone(cp));
+        let attributes = Attribute::read_attributes(reader, Rc::clone(&cp));
         Box::new(MemberInfo {
-            cp:Rc::clone(cp),
+            cp,
             access_flags,
             name_index,
             descriptor_index,

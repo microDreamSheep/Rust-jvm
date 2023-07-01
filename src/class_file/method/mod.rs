@@ -15,19 +15,22 @@ impl MethodInfo {
     pub(crate) fn read_methods(reader: &mut Reader, cp: Rc<RefCell<ConstantPool>>) -> Vec<Box<MethodInfo>> {
         let method_count = reader.read_uint16();
         let mut members = vec![];
-        for _ in 0..method_count {
-            members.push(MethodInfo::read_method(reader, &cp));
+        for i in 0..method_count {
+            members.push(MethodInfo::read_method(reader,Rc::clone(&cp)));
         }
         members
     }
-    fn read_method(reader: &mut Reader, cp: &Rc<RefCell<ConstantPool>>) -> Box<MethodInfo> {
-        let pool = Rc::clone(cp);
+    fn read_method(reader: &mut Reader, cp: Rc<RefCell<ConstantPool>>) -> Box<MethodInfo> {
+        let access_flags = reader.read_uint16();
+        let name_index = reader.read_uint16();
+        let descriptor_index = reader.read_uint16();
+        let attributes = Attribute::read_attributes(reader, Rc::clone(&cp));
         Box::new(MethodInfo {
-            cp:Rc::clone(cp),
-            access_flags: reader.read_uint16(),
-            name_index: reader.read_uint16(),
-            descriptor_index: reader.read_uint16(),
-            attributes: Attribute::read_attributes(reader, pool),
+            cp,
+            access_flags,
+            name_index,
+            descriptor_index,
+            attributes
         })
     }
     pub fn get_name(&self) -> String {

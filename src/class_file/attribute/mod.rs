@@ -11,6 +11,7 @@ pub struct Attribute{
 impl Attribute {
     pub fn read_attributes(reader: &mut Reader, cp:Rc<RefCell<ConstantPool>>)->Vec<Box<dyn AttributeInfo>>{
         let attributes_count = reader.read_uint16();
+        println!("attributes_count:{}",attributes_count);
         let mut attributes:Vec<Box<dyn AttributeInfo>> = Vec::with_capacity(attributes_count as usize);
         for _ in 0..attributes_count{
             attributes.push(get_attributes(reader, &cp));
@@ -35,6 +36,7 @@ fn get_attribute_info(name:String, reader:&mut Reader, cp:&Rc<RefCell<ConstantPo
         "LocalVariableTable" => LocalVariableTableAttribute::new(name,reader,cp),
         "SourceFile" => SourceFileAttribute::new(name,reader,cp),
         "Synthetic" => SyntheticAttribute::new(name,reader,cp),
+        "Signature" => SignatureAttribute::new(name,reader,cp),
         _ => UnparsedAttribute::new(name,reader,cp),
     }
 }
@@ -52,15 +54,17 @@ pub trait AttributeInfo{
  */
 pub struct UnparsedAttribute{
     pub name:String,
-    pub length:u64,
+    pub length:u32,
     pub info:Vec<u8>,
 }
 impl AttributeInfo for UnparsedAttribute{
 
     fn new(name:String,reader: &mut Reader,_:&Rc<RefCell<ConstantPool>>) -> Box<dyn AttributeInfo> where Self:Sized {
         let name = name;
-        let length = reader.read_uint64();
-        let info:Vec<u8> = Vec::with_capacity(length as usize);
+        println!("{}",name);
+        let length = reader.read_uint32();
+        let mut info:Vec<u8> = Vec::new();
+        info.append(&mut reader.read_bytes(length as usize));
         Box::new(UnparsedAttribute{
             name,
             length,
@@ -142,7 +146,7 @@ pub struct SourceFileAttribute{
 }
 impl AttributeInfo for SourceFileAttribute{
     fn new(name:String,reader: &mut Reader,cp:&Rc<RefCell<ConstantPool>>) -> Box<dyn AttributeInfo> where Self:Sized {
-        let _ = reader.read_uint64();
+        let _ = reader.read_uint32();
         let source_name_index = reader.read_uint16();
         //通过常量池索引获取常量池中的字符串
         let source_name = cp.borrow().get_utf8(&source_name_index).to_string();
@@ -176,7 +180,7 @@ pub struct ConstantValueAttribute{
 }
 impl AttributeInfo for ConstantValueAttribute {
     fn new(name: String, reader: &mut Reader, cp: &Rc<RefCell<ConstantPool>>) -> Box<dyn AttributeInfo> where Self: Sized {
-        let _ = reader.read_uint64();
+        let a = reader.read_uint32();
         let constant_value_index = reader.read_uint16();
         Box::new(ConstantValueAttribute {
             name,
@@ -238,12 +242,12 @@ pub struct CodeAttribute{
 }
 impl AttributeInfo for CodeAttribute{
     fn new(name:String,reader: &mut Reader,cp:&Rc<RefCell<ConstantPool>>) -> Box<dyn AttributeInfo> where Self:Sized {
-        let _ = reader.read_uint64();
+        let _ = reader.read_uint32();
         let max_stack = reader.read_uint16();
         let max_locals = reader.read_uint16();
         let code_length = reader.read_uint32();
         let code = reader.read_bytes(code_length as usize);
-
+        //输出接下来的四个字节
         let exception_table_length = reader.read_uint16();
         let mut exception_table:Vec<ExceptionTableEntry> = Vec::with_capacity(exception_table_length as usize);
         for _ in 0..exception_table_length{
@@ -283,7 +287,7 @@ pub struct ExceptionsAttribute{
 }
 impl AttributeInfo for ExceptionsAttribute{
     fn new(name:String,reader: &mut Reader,_:&Rc<RefCell<ConstantPool>>) -> Box<dyn AttributeInfo> where Self:Sized {
-        let _ = reader.read_uint64();
+        let _ = reader.read_uint32();
         let exception_index_table_length = reader.read_uint16();
         let mut exception_index_table:Vec<u16> = Vec::with_capacity(exception_index_table_length as usize);
         for _ in 0..exception_index_table_length{
@@ -336,12 +340,14 @@ pub struct LineNumberTableAttribute{
 }
 impl AttributeInfo for LineNumberTableAttribute{
     fn new(name:String,reader: &mut Reader,_:&Rc<RefCell<ConstantPool>>) -> Box<dyn AttributeInfo> where Self:Sized {
-        let _ = reader.read_uint64();
+        let _ = reader.read_uint32();
         let line_number_table_length = reader.read_uint16();
+        println!("line number table length:{}",line_number_table_length);
         let mut line_number_table:Vec<LineNumberTableEntry> = Vec::with_capacity(line_number_table_length as usize);
         for _ in 0..line_number_table_length{
             line_number_table.push(LineNumberTableEntry::new(reader));
         }
+        println!("line number table:{:?}",line_number_table.len());
         Box::new(LineNumberTableAttribute{
             name,
             line_number_table,
@@ -396,7 +402,7 @@ pub struct LocalVariableTableAttribute{
 }
 impl AttributeInfo for LocalVariableTableAttribute{
     fn new(name:String,reader: &mut Reader,_:&Rc<RefCell<ConstantPool>>) -> Box<dyn AttributeInfo> where Self:Sized {
-        let _ = reader.read_uint64();
+        let _ = reader.read_uint32();
         let local_variable_table_length = reader.read_uint16();
         let mut local_variable_table:Vec<LocalVariableTableEntry> = Vec::with_capacity(local_variable_table_length as usize);
         for _ in 0..local_variable_table_length{
@@ -410,6 +416,35 @@ impl AttributeInfo for LocalVariableTableAttribute{
 
     fn to_string(&self) -> String {
         "local variable table attribute".to_string()+&self.name
+    }
+
+    fn get_name(&self) -> String {
+        self.name.clone()
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
+/*
+signature属性
+**/
+pub struct SignatureAttribute{
+    pub name:String,
+    pub signature_index:u16,
+}
+impl AttributeInfo for SignatureAttribute{
+    fn new(name:String,reader: &mut Reader,cp:&Rc<RefCell<ConstantPool>>) -> Box<dyn AttributeInfo> where Self:Sized {
+        let _ = reader.read_uint32();
+        let signature_index = reader.read_uint16();
+        Box::new(SignatureAttribute{
+            name,
+            signature_index,
+        })
+    }
+
+    fn to_string(&self) -> String {
+        "signature attribute".to_string()+&self.name
     }
 
     fn get_name(&self) -> String {

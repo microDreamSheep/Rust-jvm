@@ -75,7 +75,7 @@ impl ClassFile{
     fn read_interfaces(reader:&mut Reader) -> Vec<u16>{
         let mut result = Vec::new();
         let count = reader.read_uint16();
-        for _ in 1..count-1 {
+        for _ in 0..count {
             result.push(reader.read_uint16());
         }
         result

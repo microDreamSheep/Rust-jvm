@@ -50,4 +50,9 @@ fn start(env:Environment){
             println!("super_class:{}",a.get_name());
         }
     }
+    //输出接口
+    println!("interfaces_count:{}",class_file.interfaces.len());
+    for i in 0..class_file.interfaces.len(){
+        println!("interfaces[{}]:{}",i,class_file.interfaces[i]);
+    }
 }
