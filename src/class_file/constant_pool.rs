@@ -1,7 +1,8 @@
 use std::cell::RefCell;
+use std::ops::Deref;
 use std::rc::Rc;
 use crate::class_file::constant_info;
-use crate::class_file::constant_info::{ConstantInfo, NullConstant};
+use crate::class_file::constant_info::{ConstantInfo, ConstantUtf8Info, NullConstant};
 use crate::class_file::reader::Reader;
 
 pub struct ConstantPool{
@@ -31,6 +32,11 @@ impl ConstantPool{
             cp.borrow_mut().constant_pool.push(Box::new(NullConstant{}))
         }
     }
+    pub fn get_utf8(&self, index: &u16) -> String {
+        let utf8 = self.get(&(index-1)).as_any().downcast_ref::<ConstantUtf8Info>().unwrap();
+        utf8.val.clone()
+    }
+
     pub(crate) fn get(&self, index: &u16) ->&Box<dyn ConstantInfo>{
         &self.constant_pool.get(*index as usize).unwrap()
     }

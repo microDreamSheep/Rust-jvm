@@ -41,5 +41,13 @@ fn start(env:Environment){
     let supper:&Box<dyn ConstantInfo> = &constant.constant_pool.get((class_file.super_class-1) as usize).unwrap();
     println!("access_flags:{}",class_file.access_flags);
     println!("this_class:{}",class_file.this_class);
-    println!("super_class:{},name:{}",class_file.super_class,supper.as_any().downcast_ref::<ConstantClassInfo>().unwrap().get_name());
+    match supper.as_any().downcast_ref::<ConstantClassInfo>() {
+        None => {
+            panic!("cant find super_class");
+        }
+        Some(a) => {
+            println!("super_class:{}",class_file.super_class);
+            println!("super_class:{}",a.get_name());
+        }
+    }
 }

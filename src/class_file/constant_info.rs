@@ -216,8 +216,7 @@ impl ConstantInfo for ConstantStringInfo{
 impl ConstantStringInfo {
     fn get_value(&self) ->String{
         let binding = (&self.meta).cp.deref().borrow();
-        let constant_info = binding.get(&(self.string_index-1));
-        constant_info.as_any().downcast_ref::<ConstantUtf8Info>().unwrap().val.clone()
+        binding.get_utf8(&self.string_index)
     }
 }
 
@@ -253,8 +252,7 @@ impl ConstantInfo for ConstantClassInfo{
 impl ConstantClassInfo {
     pub(crate) fn get_name(&self) ->String{
         let binding = (&self.meta).cp.deref().borrow();
-        let constant_info = binding.get(&(self.name_index-1));
-        constant_info.as_any().downcast_ref::<ConstantUtf8Info>().unwrap().val.clone()
+        binding.get_utf8(&self.name_index)
     }
 }
 /**
@@ -292,13 +290,11 @@ impl ConstantInfo for ConstantNameAndTypeInfo{
 impl ConstantNameAndTypeInfo {
     fn get_name(&self) ->String{
         let binding = (&self.meta).cp.deref().borrow();
-        let constant_info = binding.get(&(self.name_index-1));
-        constant_info.as_any().downcast_ref::<ConstantUtf8Info>().unwrap().val.clone()
+        binding.get_utf8(&self.name_index)
     }
     fn get_descriptor(&self) ->String{
         let binding = (&self.meta).cp.deref().borrow();
-        let constant_info = binding.get(&(self.descriptor_index-1));
-        constant_info.as_any().downcast_ref::<ConstantUtf8Info>().unwrap().val.clone()
+        binding.get_utf8(&self.descriptor_index)
     }
 }
 /**

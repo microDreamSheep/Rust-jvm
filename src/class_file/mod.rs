@@ -1,12 +1,14 @@
 use std::cell::RefCell;
 use std::fs::read;
 use std::rc::Rc;
+use crate::class_file::attribute::Attribute;
 use crate::class_file::constant_pool::ConstantPool;
 use crate::class_file::reader::Reader;
 
 pub mod reader;
 pub mod constant_pool;
 pub mod constant_info;
+pub mod attribute;
 
 pub struct ClassFile{
     pub magic:u32,
@@ -21,6 +23,7 @@ pub struct ClassFile{
     //pub methods:Vec<Box<MemberInfo>>,
     //pub attributes:Vec<Box<Attribute>>
 }
+
 impl ClassFile{
     pub(crate) fn parse(class_data:Vec<u8>) ->ClassFile{
         let mut reader = Reader::new(class_data);
@@ -33,7 +36,7 @@ impl ClassFile{
         let interfaces = ClassFile::read_interfaces(&mut reader);
         //let fields = ClassFile::read_members(&mut reader);
         //let methods = ClassFile::read_members(&mut reader);
-        //let attributes = ClassFile::read_attributes(&mut reader);
+        let _ = Attribute::read_attributes(&mut reader,Rc::clone(&constant_pool));
         ClassFile{
             magic,
             minor_version,
