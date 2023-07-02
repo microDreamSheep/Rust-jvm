@@ -18,7 +18,7 @@ impl ConstantPool{
         let pool = ConstantPool::new();
         let arc = Rc::new(RefCell::new(pool));
         let mut is_dou = false;
-        for i in 0..constant_pool_count-1{
+        for _ in 0..constant_pool_count-1{
             if !is_dou {
                 is_dou = 1 == ConstantPool::read_constant_info(reader, &arc);
 

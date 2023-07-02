@@ -53,6 +53,17 @@ fn start(env:Environment){
     //输出接口
     println!("interfaces_count:{}",class_file.interfaces.len());
     for i in 0..class_file.interfaces.len(){
-        println!("interfaces[{}]:{}",i,class_file.interfaces[i]);
+        let inter:&Box<dyn ConstantInfo> = &constant.constant_pool.get((class_file.super_class-1) as usize).unwrap();
+        println!("interfaces[{}]:#{}->{}",i,class_file.interfaces[i],inter.as_any().downcast_ref::<ConstantClassInfo>().unwrap().get_name());
+    }
+    //输出字段信息
+    let fields = class_file.fields;
+    for field in fields {
+        println!("name:{},descriptor:{}",field.get_name(),field.get_descriptor());
+    }
+    //输出方法信息
+    let methods = class_file.methods;
+    for method in methods {
+        println!("name:{},descriptor:{}",method.get_name(),method.get_descriptor());
     }
 }

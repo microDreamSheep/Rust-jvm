@@ -48,7 +48,6 @@ impl Reader {
     fn _read_uint16s(){}
     pub fn read_bytes(&mut self, size:usize)->Vec<u8>{
         let mut vec:Vec<u8> = Vec::new();
-        println!("size:{}",size);
         for _ in 0..size {
             vec.push(*(self.read_uint8()));
         }

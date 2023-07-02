@@ -15,7 +15,7 @@ impl MethodInfo {
     pub(crate) fn read_methods(reader: &mut Reader, cp: Rc<RefCell<ConstantPool>>) -> Vec<Box<MethodInfo>> {
         let method_count = reader.read_uint16();
         let mut members = vec![];
-        for i in 0..method_count {
+        for _ in 0..method_count {
             members.push(MethodInfo::read_method(reader,Rc::clone(&cp)));
         }
         members

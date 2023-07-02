@@ -11,7 +11,6 @@ pub struct Attribute{
 impl Attribute {
     pub fn read_attributes(reader: &mut Reader, cp:Rc<RefCell<ConstantPool>>)->Vec<Box<dyn AttributeInfo>>{
         let attributes_count = reader.read_uint16();
-        println!("attributes_count:{}",attributes_count);
         let mut attributes:Vec<Box<dyn AttributeInfo>> = Vec::with_capacity(attributes_count as usize);
         for _ in 0..attributes_count{
             attributes.push(get_attributes(reader, &cp));
@@ -61,10 +60,8 @@ impl AttributeInfo for UnparsedAttribute{
 
     fn new(name:String,reader: &mut Reader,_:&Rc<RefCell<ConstantPool>>) -> Box<dyn AttributeInfo> where Self:Sized {
         let name = name;
-        println!("{}",name);
         let length = reader.read_uint32();
-        let mut info:Vec<u8> = Vec::new();
-        info.append(&mut reader.read_bytes(length as usize));
+        let info:Vec<u8> = reader.read_bytes(length as usize);
         Box::new(UnparsedAttribute{
             name,
             length,
@@ -93,7 +90,8 @@ pub struct DeprecatedAttribute{
     pub name:String,
 }
 impl AttributeInfo for DeprecatedAttribute{
-    fn new(name:String,_: &mut Reader,_:&Rc<RefCell<ConstantPool>>) -> Box<dyn AttributeInfo> where Self:Sized {
+    fn new(name:String,reader: &mut Reader,_:&Rc<RefCell<ConstantPool>>) -> Box<dyn AttributeInfo> where Self:Sized {
+        reader.read_uint32();
         Box::new(DeprecatedAttribute{
             name,
         })
@@ -119,7 +117,8 @@ pub struct SyntheticAttribute{
     pub name:String,
 }
 impl AttributeInfo for SyntheticAttribute{
-    fn new(name:String,_: &mut Reader,_:&Rc<RefCell<ConstantPool>>) -> Box<dyn AttributeInfo> where Self:Sized {
+    fn new(name:String,reader: &mut Reader,_:&Rc<RefCell<ConstantPool>>) -> Box<dyn AttributeInfo> where Self:Sized {
+        reader.read_uint32();
         Box::new(SyntheticAttribute{
             name,
         })
@@ -180,7 +179,7 @@ pub struct ConstantValueAttribute{
 }
 impl AttributeInfo for ConstantValueAttribute {
     fn new(name: String, reader: &mut Reader, cp: &Rc<RefCell<ConstantPool>>) -> Box<dyn AttributeInfo> where Self: Sized {
-        let a = reader.read_uint32();
+        let _ = reader.read_uint32();
         let constant_value_index = reader.read_uint16();
         Box::new(ConstantValueAttribute {
             name,
@@ -342,12 +341,10 @@ impl AttributeInfo for LineNumberTableAttribute{
     fn new(name:String,reader: &mut Reader,_:&Rc<RefCell<ConstantPool>>) -> Box<dyn AttributeInfo> where Self:Sized {
         let _ = reader.read_uint32();
         let line_number_table_length = reader.read_uint16();
-        println!("line number table length:{}",line_number_table_length);
         let mut line_number_table:Vec<LineNumberTableEntry> = Vec::with_capacity(line_number_table_length as usize);
         for _ in 0..line_number_table_length{
             line_number_table.push(LineNumberTableEntry::new(reader));
         }
-        println!("line number table:{:?}",line_number_table.len());
         Box::new(LineNumberTableAttribute{
             name,
             line_number_table,
@@ -434,7 +431,7 @@ pub struct SignatureAttribute{
     pub signature_index:u16,
 }
 impl AttributeInfo for SignatureAttribute{
-    fn new(name:String,reader: &mut Reader,cp:&Rc<RefCell<ConstantPool>>) -> Box<dyn AttributeInfo> where Self:Sized {
+    fn new(name:String,reader: &mut Reader,_:&Rc<RefCell<ConstantPool>>) -> Box<dyn AttributeInfo> where Self:Sized {
         let _ = reader.read_uint32();
         let signature_index = reader.read_uint16();
         Box::new(SignatureAttribute{
