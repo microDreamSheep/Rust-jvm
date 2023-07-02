@@ -10,6 +10,8 @@ use crate::cmd::Environment;
 mod cmd;
 mod class_path;
 mod class_file;
+mod instructions;
+mod run_time_data;
 
 fn main() {
     match Environment::parse_environment(env::args().collect()){
