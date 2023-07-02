@@ -1,4 +1,5 @@
 use crate::class_file::reader::Reader;
+use crate::run_time_data::Frame;
 
 mod byte_code_reader;
 mod constants;

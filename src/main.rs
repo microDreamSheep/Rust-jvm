@@ -3,6 +3,7 @@ extern crate core;
 use crate::class_file::ClassFile;
 use std::env;
 use std::ops::Deref;
+use std::time::Instant;
 use crate::class_file::constant_info::{ConstantClassInfo, ConstantInfo};
 use crate::class_path::parse;
 use crate::cmd::Environment;
@@ -30,6 +31,8 @@ fn main() {
 fn start(env:Environment){
     let class_path = parse(env);
     let (data,_) = class_path.read_class("java/lang/String.class");
+
+    let start = Instant::now();
     let class_file = ClassFile::parse(data);
     println!("magic:{}",class_file.magic);
     println!("minor_version:{}",class_file.minor_version);
@@ -68,4 +71,6 @@ fn start(env:Environment){
     for method in methods {
         println!("name:{},descriptor:{}",method.get_name(),method.get_descriptor());
     }
+    let duration = start.elapsed();
+    println!("Time elapsed in expensive_function() is: {:?}", duration.as_millis());
 }

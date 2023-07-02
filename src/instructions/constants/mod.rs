@@ -1,5 +1,6 @@
 use crate::class_file::reader::Reader;
 use crate::instructions::Instruction;
+use crate::run_time_data::Frame;
 
 
 /**
@@ -11,7 +12,7 @@ impl Instruction for Nop {
         // Do nothing
     }
 
-    fn execute(&self, _: &mut Frame) {
+    fn execute(&mut self, _: &mut Frame) {
         // Do nothing
     }
 }

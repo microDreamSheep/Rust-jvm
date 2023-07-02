@@ -1,4 +1,4 @@
-struct ByteCodeReader{
+pub struct ByteCodeReader{
     pc: usize,
     code: Vec<u8>,
 }
