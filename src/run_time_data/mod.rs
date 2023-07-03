@@ -1,4 +1,4 @@
-use std::cell::{Ref, RefCell};
+use std::cell::{RefCell};
 use std::ops::Deref;
 use std::rc::Rc;
 use crate::run_time_data::local_var::LocalVars;
@@ -49,7 +49,7 @@ impl Stack{
             _top: Rc::new(RefCell::new(Frame::new(None,0,0))),
         }
     }
-    pub fn push(&mut self, mut frame:Rc<RefCell<Frame>>){
+    pub fn push(&mut self, frame:Rc<RefCell<Frame>>){
         if self.size >= self.max_size{
             panic!("java.lang.StackOverflowError");
         }
@@ -95,51 +95,56 @@ pub struct Object{}
 //test
 #[cfg(test)]
 mod tests{
-    use crate::run_time_data::Frame;
+    use std::any::Any;
+    use crate::run_time_data::{Frame, Object};
     use crate::run_time_data::Thread;
     use std::cell::RefCell;
+    use std::f32::consts::PI;
+    use std::f64::consts::E;
+    use std::ops::Deref;
     use std::rc::Rc;
 
     #[test]
     fn test_thread(){
         let mut thread = Thread::new();
-        let frame = Rc::new(RefCell::new(Frame::new(None,0,0)));
-        thread.push_frame(frame);
-        let frame = Rc::new(RefCell::new(Frame::new(None,0,0)));
-        thread.push_frame(frame);
-        let frame = Rc::new(RefCell::new(Frame::new(None,0,0)));
-        thread.push_frame(frame);
-        let frame = Rc::new(RefCell::new(Frame::new(None,0,0)));
-        thread.push_frame(frame);
-        let frame = Rc::new(RefCell::new(Frame::new(None,0,0)));
-        thread.push_frame(frame);
-        let frame = Rc::new(RefCell::new(Frame::new(None,0,0)));
-        thread.push_frame(frame);
-        let frame = Rc::new(RefCell::new(Frame::new(None,0,0)));
-        thread.push_frame(frame);
-        let frame = Rc::new(RefCell::new(Frame::new(None,0,0)));
-        thread.push_frame(frame);
-        let frame = Rc::new(RefCell::new(Frame::new(None,0,0)));
-        thread.push_frame(frame);
-        assert_eq!(thread.stack.size,9);
-        thread.pop_frame();
-        assert_eq!(thread.stack.size,8);
-        thread.pop_frame();
-        assert_eq!(thread.stack.size,7);
-        thread.pop_frame();
-        assert_eq!(thread.stack.size,6);
-        thread.pop_frame();
-        assert_eq!(thread.stack.size,5);
-        thread.pop_frame();
-        assert_eq!(thread.stack.size,4);
-        thread.pop_frame();
-        assert_eq!(thread.stack.size,3);
-        thread.pop_frame();
-        assert_eq!(thread.stack.size,2);
-        thread.pop_frame();
-        assert_eq!(thread.stack.size,1);
-        thread.pop_frame();
-        assert_eq!(thread.stack.size,0);
+        thread.push_frame(Rc::new(RefCell::new(Frame::new(None,50,50))));
+        thread.push_frame(Rc::new(RefCell::new(Frame::new(None,50,50))));
+        thread.push_frame(Rc::new(RefCell::new(Frame::new(None,50,50))));
+        let a = thread.pop_frame();
+        //测试操作数栈
+        let operator_stack = &mut a.deref().borrow_mut().operator_stack;
+        operator_stack.push_int(100);
+        operator_stack.push_long(2997924580);
+        operator_stack.push_float(PI);
+        operator_stack.push_double(E);
+        let obj = Rc::new(RefCell::new(Object{}));
+        operator_stack.push_ref(Rc::clone(&obj));
+        //获取obj的内存地址
+        let obj_addr = operator_stack.pop_ref().deref().borrow().deref() as *const dyn Any;
+        //判断obj的内存地址是否相等
+        assert_eq!(obj_addr,obj.deref().borrow().deref() as *const dyn Any);
+        assert_eq!(operator_stack.pop_double(),E);
+        assert_eq!(operator_stack.pop_float(),PI);
+        assert_eq!(operator_stack.pop_long(),2997924580);
+        assert_eq!(operator_stack.pop_int(),100);
+        //测试局部变量表
+        let binding = thread.pop_frame();
+        let local_vars = &mut binding.deref().borrow_mut().local_vars;
+        local_vars.set_int(0,100);
+        local_vars.set_long(1,2997924580);
+        local_vars.set_float(3,PI);
+        local_vars.set_double(5,E);
+        let obj = Rc::new(RefCell::new(Object{}));
+        local_vars.set_ref(7,Rc::clone(&obj));
+        //获取obj的内存地址
+        let obj_addr = local_vars.get_ref(7).deref().borrow().deref() as *const dyn Any;
+        //判断obj的内存地址是否相等
+        assert_eq!(obj_addr,obj.deref().borrow().deref() as *const dyn Any);
+        assert_eq!(local_vars.get_double(5),E);
+        assert_eq!(local_vars.get_float(3),PI);
+        assert_eq!(local_vars.get_long(1),2997924580);
+        assert_eq!(local_vars.get_int(0),100);
+
     }
 }
 

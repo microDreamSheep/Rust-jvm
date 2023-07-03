@@ -24,6 +24,6 @@ impl Slot {
         &self.num
     }
     pub fn get_refer(&self)->Rc<RefCell<Object>>{
-        self.refer.clone().unwrap()
+        Rc::clone(self.refer.as_ref().unwrap())
     }
 }

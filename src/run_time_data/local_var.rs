@@ -29,29 +29,33 @@ impl LocalVars {
         *slot.get_num()
     }
     pub fn set_float(&mut self,index:u32,value:f32){
-        self.get_slots().get_mut(index as usize).unwrap().set_num(value as i32);
+        //float to int
+        let int = value.to_bits() as i32;
+        self.set_int(index,int);
     }
     pub fn get_float(&mut self,index:u32)->f32{
-        let slot: &Slot = self.get_slots().get(index as usize).unwrap();
-        *slot.get_num() as f32
+        let int = self.get_int(index) as u32;
+        f32::from_bits(int)
     }
     pub fn set_long(&mut self,index:u32,value:i64){
-        self.get_slots().get_mut(index as usize).unwrap().set_num(value as i32);
+        let low = (value & 0xFFFFFFFF) as i32;
+        let high = (value >> 32) as i32;
+        self.set_int(index,low);
+        self.set_int(index + 1,high);
     }
     pub fn get_long(&mut self,index:u32)->i64{
-        let slots = self.get_slots();
-        let high = slots.get(index as usize).unwrap().get_num();
-        let low = slots.get(index as usize + 1).unwrap().get_num();
-        (((*high as i64) << 32) | (*low as i64)) as i64
+        let low = self.get_int(index) as u32;
+        let high = self.get_int(index + 1) as u32;
+        ((high as i64) << 32) | (low as i64)
     }
     pub fn set_double(&mut self,index:u32,value:f64){
-        self.get_slots().get_mut(index as usize).unwrap().set_num(value as i32);
+        //double to long
+        let long = value.to_bits() as i64;
+        self.set_long(index,long);
     }
-    pub fn get_double(&mut self, index:u32) ->f64{
-        let slots = self.get_slots();
-        let high = slots.get(index as usize).unwrap().get_num();
-        let low = slots.get(index as usize + 1).unwrap().get_num();
-        (((*high as i64) << 32) | (*low as i64)) as f64
+    pub fn get_double(&mut self,index:u32)->f64{
+        let long = self.get_long(index) as u64;
+        f64::from_bits(long)
     }
     pub fn set_ref(&mut self,index:u32,value:Rc<RefCell<Object>>){
         self.get_slots().get_mut(index as usize).unwrap().set_refer(value);
