@@ -2,7 +2,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use crate::class_file::constant_info;
 use crate::class_file::constant_info::{ConstantInfo, ConstantUtf8Info, NullConstant};
-use crate::class_file::reader::Reader;
+use crate::class_file::reader::ByteCodeReader;
 
 pub struct ConstantPool{
     pub constant_pool:Vec<Box<dyn ConstantInfo>>,
@@ -13,7 +13,7 @@ impl ConstantPool{
             constant_pool:vec![],
         }
     }
-    pub fn read_constant_pool(reader:&mut Reader)->Rc<RefCell<ConstantPool>>{
+    pub fn read_constant_pool(reader:&mut ByteCodeReader) ->Rc<RefCell<ConstantPool>>{
         let constant_pool_count = reader.read_uint16();
         let pool = ConstantPool::new();
         let arc = Rc::new(RefCell::new(pool));
@@ -28,7 +28,7 @@ impl ConstantPool{
         }
         arc
     }
-    fn read_constant_info(reader:&mut Reader, cp: &Rc<RefCell<ConstantPool>>)->u16{
+    fn read_constant_info(reader:&mut ByteCodeReader, cp: &Rc<RefCell<ConstantPool>>) ->u16{
         let key = reader.read_uint8();
         let mut constant_info = constant_info::get(&key,cp);
         let is = constant_info.read_info(reader);

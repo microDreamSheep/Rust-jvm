@@ -2,11 +2,11 @@ use std::any::Any;
 use std::cell::RefCell;
 use std::ops::Deref;
 use std::rc::Rc;
-use crate::class_file::reader::Reader;
+use crate::class_file::reader::ByteCodeReader;
 use crate::class_file::constant_pool::ConstantPool;
 
 pub trait ConstantInfo {
-    fn read_info( &mut self, reader: &mut Reader)->bool;
+    fn read_info(&mut self, reader: &mut ByteCodeReader) ->bool;
     fn new(cp:&Rc<RefCell<ConstantPool>>)->Box<dyn ConstantInfo> where Self: Sized;
     fn to_string(&self)->String;
     fn as_any(&self)->&dyn Any;
@@ -21,7 +21,7 @@ pub struct ConstantInfoMeta{
 pub struct NullConstant{}
 
 impl ConstantInfo for NullConstant{
-    fn read_info(&mut self, _: &mut Reader) -> bool { false }
+    fn read_info(&mut self, _: &mut ByteCodeReader) -> bool { false }
 
     fn new(_: &Rc<RefCell<ConstantPool>>) -> Box<dyn ConstantInfo> where Self: Sized {
         Box::new(NullConstant{})
@@ -41,7 +41,7 @@ pub struct ConstantIntegerInfo {
     pub meta:ConstantInfoMeta,
 }
 impl ConstantInfo for ConstantIntegerInfo{
-    fn read_info(&mut self, reader: &mut Reader) ->bool{
+    fn read_info(&mut self, reader: &mut ByteCodeReader) ->bool{
         self.val = reader.read_uint32() as i32;
         false
     }
@@ -70,7 +70,7 @@ pub struct ConstantFloatInfo {
     pub meta:ConstantInfoMeta,
 }
 impl ConstantInfo for ConstantFloatInfo{
-    fn read_info(&mut self, reader: &mut Reader)->bool {
+    fn read_info(&mut self, reader: &mut ByteCodeReader) ->bool {
         self.val = reader.read_uint32() as f32;
         false
     }
@@ -99,7 +99,7 @@ pub struct ConstantLongInfo {
     pub meta:ConstantInfoMeta,
 }
 impl ConstantInfo for ConstantLongInfo{
-    fn read_info(&mut self, reader: &mut Reader) ->bool{
+    fn read_info(&mut self, reader: &mut ByteCodeReader) ->bool{
         self.val = reader.read_uint64() as i64;
         true
     }
@@ -128,7 +128,7 @@ pub struct ConstantDoubleInfo {
     pub meta:ConstantInfoMeta,
 }
 impl ConstantInfo for ConstantDoubleInfo{
-    fn read_info(&mut self, reader: &mut Reader) ->bool{
+    fn read_info(&mut self, reader: &mut ByteCodeReader) ->bool{
         self.val = reader.read_uint64() as f64;
         true
 
@@ -158,7 +158,7 @@ pub struct ConstantUtf8Info {
     pub meta:ConstantInfoMeta,
 }
 impl ConstantInfo for ConstantUtf8Info{
-    fn read_info(&mut self, reader: &mut Reader)->bool {
+    fn read_info(&mut self, reader: &mut ByteCodeReader) ->bool {
         let length = reader.read_uint16();
         let mut bytes = vec![];
         for _ in 0..length{
@@ -192,7 +192,7 @@ pub struct ConstantStringInfo {
     pub meta:ConstantInfoMeta,
 }
 impl ConstantInfo for ConstantStringInfo{
-    fn read_info(&mut self, reader: &mut Reader) ->bool{
+    fn read_info(&mut self, reader: &mut ByteCodeReader) ->bool{
         self.string_index = reader.read_uint16();
         false
     }
@@ -228,7 +228,7 @@ pub struct ConstantClassInfo {
     pub meta:ConstantInfoMeta,
 }
 impl ConstantInfo for ConstantClassInfo{
-    fn read_info(&mut self, reader: &mut Reader)->bool {
+    fn read_info(&mut self, reader: &mut ByteCodeReader) ->bool {
         self.name_index = reader.read_uint16();
         false
     }
@@ -264,7 +264,7 @@ pub struct ConstantNameAndTypeInfo{
     pub meta:ConstantInfoMeta,
 }
 impl ConstantInfo for ConstantNameAndTypeInfo{
-    fn read_info(&mut self, reader: &mut Reader)->bool {
+    fn read_info(&mut self, reader: &mut ByteCodeReader) ->bool {
         self.name_index = reader.read_uint16();
         self.descriptor_index = reader.read_uint16();
         false
@@ -306,7 +306,7 @@ pub struct ConstantMemberRefInfo {
     pub meta:ConstantInfoMeta,
 }
 impl ConstantInfo for ConstantMemberRefInfo{
-    fn read_info(&mut self, reader: &mut Reader)->bool {
+    fn read_info(&mut self, reader: &mut ByteCodeReader) ->bool {
         self.class_index = reader.read_uint16();
         self.name_and_type_index = reader.read_uint16();
         false
@@ -351,7 +351,7 @@ pub struct ConstantMethodRefInfo {
     pub ref_info: ConstantMemberRefInfo,
 }
 impl ConstantInfo for ConstantMethodRefInfo{
-    fn read_info(&mut self, reader: &mut Reader)->bool {
+    fn read_info(&mut self, reader: &mut ByteCodeReader) ->bool {
         self.ref_info.read_info(reader);
         false
     }
@@ -390,7 +390,7 @@ pub struct ConstantFieldRefInfo {
     pub ref_info: ConstantMemberRefInfo,
 }
 impl ConstantInfo for ConstantFieldRefInfo{
-    fn read_info(&mut self, reader: &mut Reader)->bool {
+    fn read_info(&mut self, reader: &mut ByteCodeReader) ->bool {
         self.ref_info.read_info(reader);
         false
     }
@@ -429,7 +429,7 @@ pub struct ConstantInterfaceMethodRefInfo{
     pub ref_info: ConstantMemberRefInfo,
 }
 impl ConstantInfo for ConstantInterfaceMethodRefInfo {
-    fn read_info(&mut self, reader: &mut Reader)->bool{
+    fn read_info(&mut self, reader: &mut ByteCodeReader) ->bool{
         self.ref_info.read_info(reader);
         false
     }
@@ -471,8 +471,8 @@ pub struct ConstantMethodHandleInfo{
     pub reference_index: u16,
 }
 impl ConstantInfo for ConstantMethodHandleInfo {
-    fn read_info(&mut self, reader: &mut Reader)->bool{
-        self.reference_kind = *reader.read_uint8();
+    fn read_info(&mut self, reader: &mut ByteCodeReader) ->bool{
+        self.reference_kind = reader.read_uint8();
         self.reference_index = reader.read_uint16();
         false
     }
@@ -498,7 +498,7 @@ pub struct ConstantMethodTypeInfo{
     pub descriptor_index: u16,
 }
 impl ConstantInfo for ConstantMethodTypeInfo {
-    fn read_info(&mut self, reader: &mut Reader)->bool{
+    fn read_info(&mut self, reader: &mut ByteCodeReader) ->bool{
         self.descriptor_index = reader.read_uint16();
         false
     }
@@ -524,7 +524,7 @@ pub struct ConstantInvokeDynamicInfo{
     pub name_and_type_index: u16,
 }
 impl ConstantInfo for ConstantInvokeDynamicInfo {
-    fn read_info(&mut self, reader: &mut Reader)->bool{
+    fn read_info(&mut self, reader: &mut ByteCodeReader) ->bool{
         self.bootstrap_method_attr_index = reader.read_uint16();
         self.name_and_type_index = reader.read_uint16();
         false

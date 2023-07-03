@@ -17,13 +17,13 @@ impl Slot {
     pub fn set_num(&mut self, value:i32){
         self.num = value;
     }
-    pub fn set_refer(&mut self, value:Rc<RefCell<Object>>){
-        self.refer = Some(value);
+    pub fn set_refer(&mut self, value:Option<Rc<RefCell<Object>>>){
+        self.refer = value;
     }
     pub fn get_num(&self)->&i32{
         &self.num
     }
-    pub fn get_refer(&self)->Rc<RefCell<Object>>{
-        Rc::clone(self.refer.as_ref().unwrap())
+    pub fn get_refer(&self)->Option<Rc<RefCell<Object>>>{
+        Some(Rc::clone(self.refer.as_ref().unwrap()))
     }
 }

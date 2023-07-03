@@ -76,8 +76,8 @@ impl Stack{
 
 pub struct Frame{
     pub lower:Option<Rc<RefCell<Frame>>>,
-    local_vars:LocalVars,
-    operator_stack:OperandStack,
+    pub(crate) local_vars:LocalVars,
+    pub operator_stack:OperandStack,
 }
 impl Frame{
     pub fn new(lower:Option<Rc<RefCell<Frame>>>,max_locals:u32,max_stack:u32)->Frame{
@@ -118,9 +118,9 @@ mod tests{
         operator_stack.push_float(PI);
         operator_stack.push_double(E);
         let obj = Rc::new(RefCell::new(Object{}));
-        operator_stack.push_ref(Rc::clone(&obj));
+        operator_stack.push_ref(Some(Rc::clone(&obj)));
         //获取obj的内存地址
-        let obj_addr = operator_stack.pop_ref().deref().borrow().deref() as *const dyn Any;
+        let obj_addr = operator_stack.pop_ref().unwrap().deref().borrow().deref() as *const dyn Any;
         //判断obj的内存地址是否相等
         assert_eq!(obj_addr,obj.deref().borrow().deref() as *const dyn Any);
         assert_eq!(operator_stack.pop_double(),E);
@@ -137,7 +137,7 @@ mod tests{
         let obj = Rc::new(RefCell::new(Object{}));
         local_vars.set_ref(7,Rc::clone(&obj));
         //获取obj的内存地址
-        let obj_addr = local_vars.get_ref(7).deref().borrow().deref() as *const dyn Any;
+        let obj_addr = local_vars.get_ref(7).unwrap().deref().borrow().deref() as *const dyn Any;
         //判断obj的内存地址是否相等
         assert_eq!(obj_addr,obj.deref().borrow().deref() as *const dyn Any);
         assert_eq!(local_vars.get_double(5),E);

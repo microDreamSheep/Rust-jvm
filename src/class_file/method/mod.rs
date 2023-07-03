@@ -2,7 +2,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use crate::class_file::attribute::{Attribute, AttributeInfo};
 use crate::class_file::constant_pool::ConstantPool;
-use crate::class_file::reader::Reader;
+use crate::class_file::reader::ByteCodeReader;
 
 pub struct MethodInfo {
     pub cp:Rc<RefCell<ConstantPool>>,
@@ -12,7 +12,7 @@ pub struct MethodInfo {
     pub attributes: Vec<Box<dyn AttributeInfo>>,
 }
 impl MethodInfo {
-    pub(crate) fn read_methods(reader: &mut Reader, cp: Rc<RefCell<ConstantPool>>) -> Vec<Box<MethodInfo>> {
+    pub(crate) fn read_methods(reader: &mut ByteCodeReader, cp: Rc<RefCell<ConstantPool>>) -> Vec<Box<MethodInfo>> {
         let method_count = reader.read_uint16();
         let mut members = vec![];
         for _ in 0..method_count {
@@ -20,7 +20,7 @@ impl MethodInfo {
         }
         members
     }
-    fn read_method(reader: &mut Reader, cp: Rc<RefCell<ConstantPool>>) -> Box<MethodInfo> {
+    fn read_method(reader: &mut ByteCodeReader, cp: Rc<RefCell<ConstantPool>>) -> Box<MethodInfo> {
         let access_flags = reader.read_uint16();
         let name_index = reader.read_uint16();
         let descriptor_index = reader.read_uint16();

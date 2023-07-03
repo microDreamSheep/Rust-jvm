@@ -2,7 +2,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use crate::class_file::attribute::{Attribute, AttributeInfo};
 use crate::class_file::constant_pool::ConstantPool;
-use crate::class_file::reader::Reader;
+use crate::class_file::reader::ByteCodeReader;
 use crate::class_file::field::MemberInfo;
 use crate::class_file::method::MethodInfo;
 
@@ -29,7 +29,7 @@ pub struct ClassFile{
 
 impl ClassFile{
     pub(crate) fn parse(class_data:Vec<u8>) ->ClassFile{
-        let mut reader = Reader::new(class_data);
+        let mut reader = ByteCodeReader::new(class_data);
         let magic = ClassFile::read_and_check_magic(&mut reader);
         let (minor_version,major_version) = ClassFile::read_and_check_version(&mut reader);
         let constant_pool = ConstantPool::read_constant_pool(&mut reader);
@@ -55,14 +55,14 @@ impl ClassFile{
         }
 
     }
-    fn read_and_check_magic(reader:&mut Reader)->u32{
+    fn read_and_check_magic(reader:&mut ByteCodeReader) ->u32{
         let magic = reader.read_uint32();
         if magic!=0xCAFEBABE {
             panic!("magic number ill")
         }
         return magic;
     }
-    fn read_and_check_version(reader: &mut Reader) ->(u16, u16){
+    fn read_and_check_version(reader: &mut ByteCodeReader) ->(u16, u16){
         let minor_version = reader.read_uint16();
         let major_version = reader.read_uint16();
         if major_version>=45&&major_version<=52{
@@ -72,7 +72,7 @@ impl ClassFile{
         }
         panic!("java.lang.UnsupportedClassVersionError!");
     }
-    fn read_interfaces(reader:&mut Reader) -> Vec<u16>{
+    fn read_interfaces(reader:&mut ByteCodeReader) -> Vec<u16>{
         let mut result = Vec::new();
         let count = reader.read_uint16();
         for _ in 0..count {

@@ -1,18 +1,18 @@
-pub struct Reader{
+pub struct ByteCodeReader {
     pub(crate) data:Vec<u8>,
     pub(crate) pointer:usize
 }
 
-impl Reader {
-    pub fn new(data:Vec<u8>)->Reader{
-        Reader{
+impl ByteCodeReader {
+    pub fn new(data:Vec<u8>)-> ByteCodeReader {
+        ByteCodeReader {
             data,
             pointer: 0,
         }
     }
 
-    pub fn read_uint8(&mut self) -> &u8 {
-        let data = self.data.get(self.pointer).unwrap();
+    pub fn read_uint8(&mut self) -> u8 {
+        let data = *self.data.get(self.pointer).unwrap();
         self.pointer+=1;
         data
     }
@@ -49,7 +49,7 @@ impl Reader {
     pub fn read_bytes(&mut self, size:usize)->Vec<u8>{
         let mut vec:Vec<u8> = Vec::new();
         for _ in 0..size {
-            vec.push(*(self.read_uint8()));
+            vec.push((self.read_uint8()));
         }
         vec
     }

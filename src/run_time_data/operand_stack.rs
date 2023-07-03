@@ -65,12 +65,12 @@ impl OperandStack{
         let long = self.pop_long() as u64;
         f64::from_bits(long)
     }
-    pub fn push_ref(&mut self,value:Rc<RefCell<Object>>){
+    pub fn push_ref(&mut self,value:Option<Rc<RefCell<Object>>>){
         let size = self.size;
         self.get_slots().get_mut(size as usize).unwrap().set_refer(value);
         self.size += 1;
     }
-    pub fn pop_ref(&mut self) ->Rc<RefCell<Object>>{
+    pub fn pop_ref(&mut self) ->Option<Rc<RefCell<Object>>>{
         self.size -= 1;
         let size = self.size;
         let slot: &Slot = self.get_slots().get(size as usize).unwrap();

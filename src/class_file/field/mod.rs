@@ -2,7 +2,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use crate::class_file::attribute::{Attribute, AttributeInfo};
 use crate::class_file::constant_pool::ConstantPool;
-use crate::class_file::reader::Reader;
+use crate::class_file::reader::ByteCodeReader;
 
 pub struct MemberInfo {
     pub cp:Rc<RefCell<ConstantPool>>,
@@ -12,7 +12,7 @@ pub struct MemberInfo {
     pub attributes: Vec<Box<dyn AttributeInfo>>,
 }
 impl MemberInfo{
-    pub(crate) fn read_members(reader: &mut Reader, cp: Rc<RefCell<ConstantPool>>) -> Vec<Box<MemberInfo>> {
+    pub(crate) fn read_members(reader: &mut ByteCodeReader, cp: Rc<RefCell<ConstantPool>>) -> Vec<Box<MemberInfo>> {
         let member_count = reader.read_uint16();
         let mut members = Vec::new();
         for _ in 0..member_count {
@@ -20,7 +20,7 @@ impl MemberInfo{
         }
         members
     }
-    fn read_member(reader: &mut Reader, cp: Rc<RefCell<ConstantPool>>) -> Box<MemberInfo> {
+    fn read_member(reader: &mut ByteCodeReader, cp: Rc<RefCell<ConstantPool>>) -> Box<MemberInfo> {
         let access_flags = reader.read_uint16();
         let name_index = reader.read_uint16();
         let descriptor_index = reader.read_uint16();

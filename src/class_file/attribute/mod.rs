@@ -2,14 +2,14 @@ use std::any::Any;
 use std::cell::RefCell;
 use std::rc::Rc;
 use crate::class_file::constant_pool::ConstantPool;
-use crate::class_file::reader::Reader;
+use crate::class_file::reader::ByteCodeReader;
 
 pub struct Attribute{
 
 }
 
 impl Attribute {
-    pub fn read_attributes(reader: &mut Reader, cp:Rc<RefCell<ConstantPool>>)->Vec<Box<dyn AttributeInfo>>{
+    pub fn read_attributes(reader: &mut ByteCodeReader, cp:Rc<RefCell<ConstantPool>>) ->Vec<Box<dyn AttributeInfo>>{
         let attributes_count = reader.read_uint16();
         let mut attributes:Vec<Box<dyn AttributeInfo>> = Vec::with_capacity(attributes_count as usize);
         for _ in 0..attributes_count{
@@ -19,13 +19,13 @@ impl Attribute {
     }
 
 }
-pub fn get_attributes(reader: &mut Reader, cp:&Rc<RefCell<ConstantPool>>) ->Box<dyn AttributeInfo>{
+pub fn get_attributes(reader: &mut ByteCodeReader, cp:&Rc<RefCell<ConstantPool>>) ->Box<dyn AttributeInfo>{
     let name_index = reader.read_uint16();
     let name = cp.borrow().get_utf8(&name_index);
     let attribute = get_attribute_info(name, reader, cp);
     attribute
 }
-fn get_attribute_info(name:String, reader:&mut Reader, cp:&Rc<RefCell<ConstantPool>>) ->Box<dyn AttributeInfo>{
+fn get_attribute_info(name:String, reader:&mut ByteCodeReader, cp:&Rc<RefCell<ConstantPool>>) ->Box<dyn AttributeInfo>{
     match name.as_str() {
         "Code" => CodeAttribute::new(name,reader,cp),
         "ConstantValue" => ConstantValueAttribute::new(name,reader,cp),
@@ -43,7 +43,7 @@ fn get_attribute_info(name:String, reader:&mut Reader, cp:&Rc<RefCell<ConstantPo
 
 
 pub trait AttributeInfo{
-    fn new(name:String,reader: &mut Reader,cp:&Rc<RefCell<ConstantPool>>)-> Box<dyn AttributeInfo> where Self:Sized;
+    fn new(name:String, reader: &mut ByteCodeReader, cp:&Rc<RefCell<ConstantPool>>) -> Box<dyn AttributeInfo> where Self:Sized;
     fn to_string(&self)->String;
     fn get_name(&self)->String;
     fn as_any(&self)->&dyn Any;
@@ -58,7 +58,7 @@ pub struct UnparsedAttribute{
 }
 impl AttributeInfo for UnparsedAttribute{
 
-    fn new(name:String,reader: &mut Reader,_:&Rc<RefCell<ConstantPool>>) -> Box<dyn AttributeInfo> where Self:Sized {
+    fn new(name:String, reader: &mut ByteCodeReader, _:&Rc<RefCell<ConstantPool>>) -> Box<dyn AttributeInfo> where Self:Sized {
         let name = name;
         let length = reader.read_uint32();
         let info:Vec<u8> = reader.read_bytes(length as usize);
@@ -90,7 +90,7 @@ pub struct DeprecatedAttribute{
     pub name:String,
 }
 impl AttributeInfo for DeprecatedAttribute{
-    fn new(name:String,reader: &mut Reader,_:&Rc<RefCell<ConstantPool>>) -> Box<dyn AttributeInfo> where Self:Sized {
+    fn new(name:String, reader: &mut ByteCodeReader, _:&Rc<RefCell<ConstantPool>>) -> Box<dyn AttributeInfo> where Self:Sized {
         reader.read_uint32();
         Box::new(DeprecatedAttribute{
             name,
@@ -117,7 +117,7 @@ pub struct SyntheticAttribute{
     pub name:String,
 }
 impl AttributeInfo for SyntheticAttribute{
-    fn new(name:String,reader: &mut Reader,_:&Rc<RefCell<ConstantPool>>) -> Box<dyn AttributeInfo> where Self:Sized {
+    fn new(name:String, reader: &mut ByteCodeReader, _:&Rc<RefCell<ConstantPool>>) -> Box<dyn AttributeInfo> where Self:Sized {
         reader.read_uint32();
         Box::new(SyntheticAttribute{
             name,
@@ -144,7 +144,7 @@ pub struct SourceFileAttribute{
     pub source_name:String,
 }
 impl AttributeInfo for SourceFileAttribute{
-    fn new(name:String,reader: &mut Reader,cp:&Rc<RefCell<ConstantPool>>) -> Box<dyn AttributeInfo> where Self:Sized {
+    fn new(name:String, reader: &mut ByteCodeReader, cp:&Rc<RefCell<ConstantPool>>) -> Box<dyn AttributeInfo> where Self:Sized {
         let _ = reader.read_uint32();
         let source_name_index = reader.read_uint16();
         //通过常量池索引获取常量池中的字符串
@@ -178,7 +178,7 @@ pub struct ConstantValueAttribute{
     pub cp:Rc<RefCell<ConstantPool>>,
 }
 impl AttributeInfo for ConstantValueAttribute {
-    fn new(name: String, reader: &mut Reader, cp: &Rc<RefCell<ConstantPool>>) -> Box<dyn AttributeInfo> where Self: Sized {
+    fn new(name: String, reader: &mut ByteCodeReader, cp: &Rc<RefCell<ConstantPool>>) -> Box<dyn AttributeInfo> where Self: Sized {
         let _ = reader.read_uint32();
         let constant_value_index = reader.read_uint16();
         Box::new(ConstantValueAttribute {
@@ -213,7 +213,7 @@ pub struct ExceptionTableEntry{
 }
 impl ExceptionTableEntry{
 
-    pub fn new(reader:&mut Reader)->ExceptionTableEntry{
+    pub fn new(reader:&mut ByteCodeReader) ->ExceptionTableEntry{
         let start_pc = reader.read_uint16();
         let end_pc = reader.read_uint16();
         let handler_pc = reader.read_uint16();
@@ -240,7 +240,7 @@ pub struct CodeAttribute{
     pub cp:Rc<RefCell<ConstantPool>>,
 }
 impl AttributeInfo for CodeAttribute{
-    fn new(name:String,reader: &mut Reader,cp:&Rc<RefCell<ConstantPool>>) -> Box<dyn AttributeInfo> where Self:Sized {
+    fn new(name:String, reader: &mut ByteCodeReader, cp:&Rc<RefCell<ConstantPool>>) -> Box<dyn AttributeInfo> where Self:Sized {
         let _ = reader.read_uint32();
         let max_stack = reader.read_uint16();
         let max_locals = reader.read_uint16();
@@ -285,7 +285,7 @@ pub struct ExceptionsAttribute{
     pub exception_index_table:Vec<u16>,
 }
 impl AttributeInfo for ExceptionsAttribute{
-    fn new(name:String,reader: &mut Reader,_:&Rc<RefCell<ConstantPool>>) -> Box<dyn AttributeInfo> where Self:Sized {
+    fn new(name:String, reader: &mut ByteCodeReader, _:&Rc<RefCell<ConstantPool>>) -> Box<dyn AttributeInfo> where Self:Sized {
         let _ = reader.read_uint32();
         let exception_index_table_length = reader.read_uint16();
         let mut exception_index_table:Vec<u16> = Vec::with_capacity(exception_index_table_length as usize);
@@ -320,7 +320,7 @@ pub struct LineNumberTableEntry{
     pub line_number:u16,
 }
 impl LineNumberTableEntry{
-    pub fn new(reader: &mut Reader) -> LineNumberTableEntry{
+    pub fn new(reader: &mut ByteCodeReader) -> LineNumberTableEntry{
         let start_pc = reader.read_uint16();
         let line_number = reader.read_uint16();
         LineNumberTableEntry{
@@ -338,7 +338,7 @@ pub struct LineNumberTableAttribute{
     pub line_number_table:Vec<LineNumberTableEntry>,
 }
 impl AttributeInfo for LineNumberTableAttribute{
-    fn new(name:String,reader: &mut Reader,_:&Rc<RefCell<ConstantPool>>) -> Box<dyn AttributeInfo> where Self:Sized {
+    fn new(name:String, reader: &mut ByteCodeReader, _:&Rc<RefCell<ConstantPool>>) -> Box<dyn AttributeInfo> where Self:Sized {
         let _ = reader.read_uint32();
         let line_number_table_length = reader.read_uint16();
         let mut line_number_table:Vec<LineNumberTableEntry> = Vec::with_capacity(line_number_table_length as usize);
@@ -375,7 +375,7 @@ pub struct LocalVariableTableEntry{
     pub index:u16,
 }
 impl LocalVariableTableEntry{
-    pub fn new(reader: &mut Reader) -> LocalVariableTableEntry{
+    pub fn new(reader: &mut ByteCodeReader) -> LocalVariableTableEntry{
         let start_pc = reader.read_uint16();
         let length = reader.read_uint16();
         let name_index = reader.read_uint16();
@@ -398,7 +398,7 @@ pub struct LocalVariableTableAttribute{
     pub local_variable_table:Vec<LocalVariableTableEntry>,
 }
 impl AttributeInfo for LocalVariableTableAttribute{
-    fn new(name:String,reader: &mut Reader,_:&Rc<RefCell<ConstantPool>>) -> Box<dyn AttributeInfo> where Self:Sized {
+    fn new(name:String, reader: &mut ByteCodeReader, _:&Rc<RefCell<ConstantPool>>) -> Box<dyn AttributeInfo> where Self:Sized {
         let _ = reader.read_uint32();
         let local_variable_table_length = reader.read_uint16();
         let mut local_variable_table:Vec<LocalVariableTableEntry> = Vec::with_capacity(local_variable_table_length as usize);
@@ -431,7 +431,7 @@ pub struct SignatureAttribute{
     pub signature_index:u16,
 }
 impl AttributeInfo for SignatureAttribute{
-    fn new(name:String,reader: &mut Reader,_:&Rc<RefCell<ConstantPool>>) -> Box<dyn AttributeInfo> where Self:Sized {
+    fn new(name:String, reader: &mut ByteCodeReader, _:&Rc<RefCell<ConstantPool>>) -> Box<dyn AttributeInfo> where Self:Sized {
         let _ = reader.read_uint32();
         let signature_index = reader.read_uint16();
         Box::new(SignatureAttribute{
