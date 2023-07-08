@@ -6,6 +6,7 @@ mod constants;
 mod loads;
 mod stores;
 mod stack;
+mod math;
 
 
 trait Instruction{
