@@ -135,7 +135,7 @@ mod tests{
         local_vars.set_float(3,PI);
         local_vars.set_double(5,E);
         let obj = Rc::new(RefCell::new(Object{}));
-        local_vars.set_ref(7,Rc::clone(&obj));
+        local_vars.set_ref(7,Some(Rc::clone(&obj)));
         //获取obj的内存地址
         let obj_addr = local_vars.get_ref(7).unwrap().deref().borrow().deref() as *const dyn Any;
         //判断obj的内存地址是否相等

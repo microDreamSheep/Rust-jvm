@@ -57,8 +57,8 @@ impl LocalVars {
         let long = self.get_long(index) as u64;
         f64::from_bits(long)
     }
-    pub fn set_ref(&mut self,index:u32,value:Rc<RefCell<Object>>){
-        self.get_slots().get_mut(index as usize).unwrap().set_refer(Some(value));
+    pub fn set_ref(&mut self,index:u32,value:Option<Rc<RefCell<Object>>>){
+        self.get_slots().get_mut(index as usize).unwrap().set_refer(value);
     }
     pub fn get_ref(&mut self, index:u32) ->Option<Rc<RefCell<Object>>>{
         let slot: &Slot = self.get_slots().get(index as usize).unwrap();
