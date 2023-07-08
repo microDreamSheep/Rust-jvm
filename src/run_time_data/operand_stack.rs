@@ -76,4 +76,19 @@ impl OperandStack{
         let slot: &Slot = self.get_slots().get(size as usize).unwrap();
         slot.get_refer()
     }
+    pub fn push_slot(&mut self,slot:Slot){
+        let size = self.size;
+        self.get_slots().get_mut(size as usize).unwrap().set_num(*slot.get_num());
+        self.get_slots().get_mut(size as usize).unwrap().set_refer(slot.get_refer());
+        self.size += 1;
+    }
+    pub fn pop_slot(&mut self) ->Slot{
+        self.size -= 1;
+        let size = self.size;
+        let slot: &Slot = self.get_slots().get(size as usize).unwrap();
+        let mut new_slot = Slot::new();
+        new_slot.set_num(*slot.get_num());
+        new_slot.set_refer(slot.get_refer());
+        new_slot
+    }
 }

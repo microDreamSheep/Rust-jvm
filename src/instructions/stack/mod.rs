@@ -5,7 +5,7 @@ use crate::run_time_data::Frame;
 /**
  pop方法从操作数栈中弹出引用类型变量
  */
-struct Pop;
+pub struct Pop;
 impl Instruction for Pop {
     fn fetch_operands(&mut self, _: &mut ByteCodeReader) {
         // Do nothing
@@ -18,7 +18,7 @@ impl Instruction for Pop {
 /**
  pop2方法从操作数栈中弹出两个变量
  */
-struct Pop2;
+pub struct Pop2;
 impl Instruction for Pop2 {
     fn fetch_operands(&mut self, _: &mut ByteCodeReader) {
         // Do nothing
@@ -32,7 +32,7 @@ impl Instruction for Pop2 {
 /**
  dup方法复制栈顶变量并把复制值压入栈顶
  */
-struct Dup;
+pub struct Dup;
 impl Instruction for Dup {
     fn fetch_operands(&mut self, _: &mut ByteCodeReader) {
         // Do nothing
@@ -47,7 +47,7 @@ impl Instruction for Dup {
 /**
  dup_x1方法复制栈顶变量并把复制值压入栈顶
  */
-struct DupX1;
+pub struct DupX1;
 impl Instruction for DupX1 {
     fn fetch_operands(&mut self, _: &mut ByteCodeReader) {
         // Do nothing
@@ -64,7 +64,7 @@ impl Instruction for DupX1 {
 /**
  dup_x2方法复制栈顶变量并把复制值压入栈顶
  */
-struct DupX2;
+pub struct DupX2;
 impl Instruction for DupX2 {
     fn fetch_operands(&mut self, _: &mut ByteCodeReader) {
         // Do nothing
@@ -83,7 +83,7 @@ impl Instruction for DupX2 {
 /**
  dup2方法复制栈顶变量并把复制值压入栈顶
  */
-struct Dup2;
+pub struct Dup2;
 impl Instruction for Dup2 {
     fn fetch_operands(&mut self, _: &mut ByteCodeReader) {
         // Do nothing
@@ -101,7 +101,7 @@ impl Instruction for Dup2 {
 /**
  dup2_x1方法复制栈顶变量并把复制值压入栈顶
  */
-struct Dup2X1;
+pub struct Dup2X1;
 impl Instruction for Dup2X1 {
     fn fetch_operands(&mut self, _: &mut ByteCodeReader) {
         // Do nothing
@@ -121,7 +121,7 @@ impl Instruction for Dup2X1 {
 /**
  dup2_x2方法复制栈顶变量并把复制值压入栈顶
  */
-struct Dup2X2;
+pub struct Dup2X2;
 impl Instruction for Dup2X2 {
     fn fetch_operands(&mut self, _: &mut ByteCodeReader) {
         // Do nothing
@@ -143,7 +143,7 @@ impl Instruction for Dup2X2 {
 /**
  swap方法交换栈顶两个变量
  */
-struct Swap;
+pub struct Swap;
 impl Instruction for Swap {
     fn fetch_operands(&mut self, _: &mut ByteCodeReader) {
         // Do nothing

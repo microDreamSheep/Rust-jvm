@@ -13,7 +13,7 @@ fn execute_int(frame: &mut Frame, index: u8) {
 /**
 i_load指令
  */
-struct ILoad{
+pub struct ILoad{
     index: u8,
 }
 impl Instruction for ILoad {
@@ -28,7 +28,7 @@ impl Instruction for ILoad {
 /**
  i_load_0指令把第一个int型局部变量推入操作数栈顶
  */
-struct ILoad0;
+pub struct ILoad0;
 impl Instruction for ILoad0 {
     fn fetch_operands(&mut self, _: &mut ByteCodeReader) {
         // Do nothing
@@ -41,7 +41,7 @@ impl Instruction for ILoad0 {
 /**
  i_load_1指令把第二个int型局部变量推入操作数栈顶
  */
-struct ILoad1;
+pub struct ILoad1;
 impl Instruction for ILoad1 {
     fn fetch_operands(&mut self, _: &mut ByteCodeReader) {
         // Do nothing
@@ -54,7 +54,7 @@ impl Instruction for ILoad1 {
 /**
  i_load_2指令把第三个int型局部变量推入操作数栈顶
  */
-struct ILoad2;
+pub struct ILoad2;
 impl Instruction for ILoad2 {
     fn fetch_operands(&mut self, _: &mut ByteCodeReader) {
         // Do nothing
@@ -67,7 +67,7 @@ impl Instruction for ILoad2 {
 /**
  i_load_3指令把第四个int型局部变量推入操作数栈顶
  */
-struct ILoad3;
+pub struct ILoad3;
 impl Instruction for ILoad3 {
     fn fetch_operands(&mut self, _: &mut ByteCodeReader) {
         // Do nothing
@@ -84,7 +84,7 @@ fn execute_long(frame: &mut Frame, index: u8) {
     let val = frame.local_vars.get_long(index as u32);
     frame.operator_stack.push_long(val);
 }
-struct LLoad{
+pub struct LLoad{
     index: u8,
 }
 impl Instruction for LLoad {
@@ -99,7 +99,7 @@ impl Instruction for LLoad {
 /**
  l_load_0指令把第一个long型局部变量推入操作数栈顶
  */
-struct LLoad0;
+pub struct LLoad0;
 impl Instruction for LLoad0 {
     fn fetch_operands(&mut self, _: &mut ByteCodeReader) {
         // Do nothing
@@ -112,7 +112,7 @@ impl Instruction for LLoad0 {
 /**
  l_load_1指令把第二个long型局部变量推入操作数栈顶
  */
-struct LLoad1;
+pub struct LLoad1;
 impl Instruction for LLoad1 {
     fn fetch_operands(&mut self, _: &mut ByteCodeReader) {
         // Do nothing
@@ -124,7 +124,7 @@ impl Instruction for LLoad1 {
 /**
  l_load_2指令把第三个long型局部变量推入操作数栈顶
  */
-struct LLoad2;
+pub struct LLoad2;
 impl Instruction for LLoad2 {
     fn fetch_operands(&mut self, _: &mut ByteCodeReader) {
         // Do nothing
@@ -136,7 +136,7 @@ impl Instruction for LLoad2 {
 /**
  l_load_3指令把第四个long型局部变量推入操作数栈顶
  */
-struct LLoad3;
+pub struct LLoad3;
 impl Instruction for LLoad3 {
     fn fetch_operands(&mut self, _: &mut ByteCodeReader) {
         // Do nothing
@@ -152,7 +152,7 @@ fn execute_float(frame: &mut Frame, index: u8) {
     let val = frame.local_vars.get_float(index as u32);
     frame.operator_stack.push_float(val);
 }
-struct FLoad{
+pub struct FLoad{
     index: u8,
 }
 impl Instruction for FLoad {
@@ -166,7 +166,7 @@ impl Instruction for FLoad {
 /**
  f_load_0指令把第一个float型局部变量推入操作数栈顶
  */
-struct FLoad0;
+pub struct FLoad0;
 impl Instruction for FLoad0 {
     fn fetch_operands(&mut self, _: &mut ByteCodeReader) {
         // Do nothing
@@ -178,7 +178,7 @@ impl Instruction for FLoad0 {
 /**
  f_load_1指令把第二个float型局部变量推入操作数栈顶
  */
-struct FLoad1;
+pub struct FLoad1;
 impl Instruction for FLoad1 {
     fn fetch_operands(&mut self, _: &mut ByteCodeReader) {
         // Do nothing
@@ -190,7 +190,7 @@ impl Instruction for FLoad1 {
 /**
  f_load_2指令把第三个float型局部变量推入操作数栈顶
  */
-struct FLoad2;
+pub struct FLoad2;
 impl Instruction for FLoad2 {
     fn fetch_operands(&mut self, _: &mut ByteCodeReader) {
         // Do nothing
@@ -202,7 +202,7 @@ impl Instruction for FLoad2 {
 /**
  f_load_3指令把第四个float型局部变量推入操作数栈顶
  */
-struct FLoad3;
+pub struct FLoad3;
 impl Instruction for FLoad3 {
     fn fetch_operands(&mut self, _: &mut ByteCodeReader) {
         // Do nothing
@@ -218,7 +218,7 @@ fn execute_double(frame: &mut Frame, index: u8) {
     let val = frame.local_vars.get_double(index as u32);
     frame.operator_stack.push_double(val);
 }
-struct DLoad{
+pub struct DLoad{
     index: u8,
 }
 impl Instruction for DLoad {
@@ -232,7 +232,7 @@ impl Instruction for DLoad {
 /**
  d_load_0指令把第一个double型局部变量推入操作数栈顶
  */
-struct DLoad0;
+pub struct DLoad0;
 impl Instruction for DLoad0 {
     fn fetch_operands(&mut self, _: &mut ByteCodeReader) {
         // Do nothing
@@ -244,7 +244,7 @@ impl Instruction for DLoad0 {
 /**
  d_load_1指令把第二个double型局部变量推入操作数栈顶
  */
-struct DLoad1;
+pub struct DLoad1;
 impl Instruction for DLoad1 {
     fn fetch_operands(&mut self, _: &mut ByteCodeReader) {
         // Do nothing
@@ -256,7 +256,7 @@ impl Instruction for DLoad1 {
 /**
  d_load_2指令把第三个double型局部变量推入操作数栈顶
  */
-struct DLoad2;
+pub struct DLoad2;
 impl Instruction for DLoad2 {
     fn fetch_operands(&mut self, _: &mut ByteCodeReader) {
         // Do nothing
@@ -269,7 +269,7 @@ impl Instruction for DLoad2 {
 /**
  d_load_3指令把第四个double型局部变量推入操作数栈顶
  */
-struct DLoad3;
+pub struct DLoad3;
 impl Instruction for DLoad3 {
     fn fetch_operands(&mut self, _: &mut ByteCodeReader) {
         // Do nothing
@@ -286,7 +286,7 @@ fn execute_ref(frame: &mut Frame, index: u8) {
     let val = frame.local_vars.get_ref(index as u32);
     frame.operator_stack.push_ref(val)
 }
-struct ALoad{
+pub struct ALoad{
     index: u8,
 }
 impl Instruction for ALoad {
@@ -301,7 +301,7 @@ impl Instruction for ALoad {
 /**
  a_load_0指令把第一个引用型局部变量推入操作数栈顶
  */
-struct ALoad0;
+pub struct ALoad0;
 impl Instruction for ALoad0 {
     fn fetch_operands(&mut self, _: &mut ByteCodeReader) {
         // Do nothing
@@ -314,7 +314,7 @@ impl Instruction for ALoad0 {
 /**
  a_load_1指令把第二个引用型局部变量推入操作数栈顶
  */
-struct ALoad1;
+pub struct ALoad1;
 impl Instruction for ALoad1 {
     fn fetch_operands(&mut self, _: &mut ByteCodeReader) {
         // Do nothing
@@ -327,7 +327,7 @@ impl Instruction for ALoad1 {
 /**
  a_load_2指令把第三个引用型局部变量推入操作数栈顶
  */
-struct ALoad2;
+pub struct ALoad2;
 impl Instruction for ALoad2 {
     fn fetch_operands(&mut self, _: &mut ByteCodeReader) {
         // Do nothing
@@ -340,7 +340,7 @@ impl Instruction for ALoad2 {
 /**
  a_load_3指令把第四个引用型局部变量推入操作数栈顶
  */
-struct ALoad3;
+pub struct ALoad3;
 impl Instruction for ALoad3 {
     fn fetch_operands(&mut self, _: &mut ByteCodeReader) {
         // Do nothing

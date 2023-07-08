@@ -7,6 +7,8 @@ mod loads;
 mod stores;
 mod stack;
 mod math;
+mod conversions;
+mod comparisons;
 
 
 trait Instruction{

@@ -34,43 +34,5 @@ fn start(env:Environment){
 
     let start = Instant::now();
     let class_file = ClassFile::parse(data);
-    println!("magic:{}",class_file.magic);
-    println!("minor_version:{}",class_file.minor_version);
-    println!("major_version:{}",class_file.major_version);
-    //获取常量池
-    let constant = class_file.constant_pool.deref().borrow();
-    println!("constant_pool_count:{}",constant.constant_pool.len());
-    for i in 0..constant.constant_pool.len(){
-        println!("constant_pool[{}]:{:?}",i+1,constant.constant_pool[i].to_string());
-    }
-    let supper:&Box<dyn ConstantInfo> = &constant.constant_pool.get((class_file.super_class-1) as usize).unwrap();
-    println!("access_flags:{}",class_file.access_flags);
-    println!("this_class:{}",class_file.this_class);
-    match supper.as_any().downcast_ref::<ConstantClassInfo>() {
-        None => {
-            panic!("cant find super_class");
-        }
-        Some(a) => {
-            println!("super_class:{}",class_file.super_class);
-            println!("super_class:{}",a.get_name());
-        }
-    }
-    //输出接口
-    println!("interfaces_count:{}",class_file.interfaces.len());
-    for i in 0..class_file.interfaces.len(){
-        let inter:&Box<dyn ConstantInfo> = &constant.constant_pool.get((class_file.super_class-1) as usize).unwrap();
-        println!("interfaces[{}]:#{}->{}",i,class_file.interfaces[i],inter.as_any().downcast_ref::<ConstantClassInfo>().unwrap().get_name());
-    }
-    //输出字段信息
-    let fields = class_file.fields;
-    for field in fields {
-        println!("name:{},descriptor:{}",field.get_name(),field.get_descriptor());
-    }
-    //输出方法信息
-    let methods = class_file.methods;
-    for method in methods {
-        println!("name:{},descriptor:{}",method.get_name(),method.get_descriptor());
-    }
-    let duration = start.elapsed();
-    println!("Time elapsed in expensive_function() is: {:?}", duration.as_millis());
+
 }

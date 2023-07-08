@@ -79,6 +79,8 @@ pub struct Frame{
     pub(crate) local_vars:LocalVars,
     pub operator_stack:OperandStack,
 }
+
+
 impl Frame{
     pub fn new(lower:Option<Rc<RefCell<Frame>>>,max_locals:u32,max_stack:u32)->Frame{
         Frame{
@@ -87,7 +89,9 @@ impl Frame{
             operator_stack: OperandStack::new(max_stack),
         }
     }
+    pub(crate) fn jump(&self, pc: usize) {
 
+    }
 }
 
 pub struct Object{}

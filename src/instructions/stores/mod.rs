@@ -12,7 +12,7 @@ fn execute_int(frame: &mut Frame, index: usize) {
 /**
 i_store指令
 */
-struct IStore {
+pub struct IStore {
     index: usize,
 }
 impl Instruction for IStore {
@@ -27,7 +27,7 @@ impl Instruction for IStore {
 /**
  i_store_0指令把操作数栈顶的int型数值存入第一个局部变量
  */
-struct IStore0;
+pub struct IStore0;
 impl Instruction for IStore0 {
     fn fetch_operands(&mut self, _: &mut ByteCodeReader) {
         // Do nothing
@@ -40,7 +40,7 @@ impl Instruction for IStore0 {
 /**
  i_store_1指令把操作数栈顶的int型数值存入第二个局部变量
  */
-struct IStore1;
+pub struct IStore1;
 impl Instruction for IStore1 {
     fn fetch_operands(&mut self, _: &mut ByteCodeReader) {
         // Do nothing
@@ -53,7 +53,7 @@ impl Instruction for IStore1 {
 /**
  i_store_2指令把操作数栈顶的int型数值存入第三个局部变量
  */
-struct IStore2;
+pub struct IStore2;
 impl Instruction for IStore2 {
     fn fetch_operands(&mut self, _: &mut ByteCodeReader) {
         // Do nothing
@@ -66,7 +66,7 @@ impl Instruction for IStore2 {
 /**
  i_store_3指令把操作数栈顶的int型数值存入第四个局部变量
  */
-struct IStore3;
+pub struct IStore3;
 impl Instruction for IStore3 {
     fn fetch_operands(&mut self, _: &mut ByteCodeReader) {
         // Do nothing
@@ -87,7 +87,7 @@ fn execute_long(frame: &mut Frame, index: usize) {
 /**
 l_store指令
 */
-struct LStore {
+pub struct LStore {
     index: usize,
 }
 impl Instruction for LStore {
@@ -102,7 +102,7 @@ impl Instruction for LStore {
 /**
  l_store_0指令把操作数栈顶的long型数值存入第一个局部变量
  */
-struct LStore0;
+pub struct LStore0;
 impl Instruction for LStore0 {
     fn fetch_operands(&mut self, _: &mut ByteCodeReader) {
         // Do nothing
@@ -115,7 +115,7 @@ impl Instruction for LStore0 {
 /**
  l_store_1指令把操作数栈顶的long型数值存入第二个局部变量
  */
-struct LStore1;
+pub struct LStore1;
 impl Instruction for LStore1 {
     fn fetch_operands(&mut self, _: &mut ByteCodeReader) {
         // Do nothing
@@ -128,7 +128,7 @@ impl Instruction for LStore1 {
 /**
  l_store_2指令把操作数栈顶的long型数值存入第三个局部变量
  */
-struct LStore2;
+pub struct LStore2;
 impl Instruction for LStore2 {
     fn fetch_operands(&mut self, _: &mut ByteCodeReader) {
         // Do nothing
@@ -141,7 +141,7 @@ impl Instruction for LStore2 {
 /**
  l_store_3指令把操作数栈顶的long型数值存入第四个局部变量
  */
-struct LStore3;
+pub struct LStore3;
 impl Instruction for LStore3 {
     fn fetch_operands(&mut self, _: &mut ByteCodeReader) {
         // Do nothing
@@ -162,7 +162,7 @@ fn execute_float(frame: &mut Frame, index: usize) {
 /**
 f_store指令
 */
-struct FStore {
+pub struct FStore {
     index: usize,
 }
 impl Instruction for FStore {
@@ -177,7 +177,7 @@ impl Instruction for FStore {
 /**
  f_store_0指令把操作数栈顶的float型数值存入第一个局部变量
  */
-struct FStore0;
+pub struct FStore0;
 impl Instruction for FStore0 {
     fn fetch_operands(&mut self, _: &mut ByteCodeReader) {
         // Do nothing
@@ -190,7 +190,7 @@ impl Instruction for FStore0 {
 /**
  f_store_1指令把操作数栈顶的float型数值存入第二个局部变量
  */
-struct FStore1;
+pub struct FStore1;
 impl Instruction for FStore1 {
     fn fetch_operands(&mut self, _: &mut ByteCodeReader) {
         // Do nothing
@@ -204,7 +204,7 @@ impl Instruction for FStore1 {
 /**
  f_store_2指令把操作数栈顶的float型数值存入第三个局部变量
  */
-struct FStore2;
+pub struct FStore2;
 impl Instruction for FStore2 {
     fn fetch_operands(&mut self, _: &mut ByteCodeReader) {
         // Do nothing
@@ -217,7 +217,7 @@ impl Instruction for FStore2 {
 /**
  f_store_3指令把操作数栈顶的float型数值存入第四个局部变量
  */
-struct FStore3;
+pub struct FStore3;
 impl Instruction for FStore3 {
     fn fetch_operands(&mut self, _: &mut ByteCodeReader) {
         // Do nothing
@@ -238,7 +238,7 @@ fn execute_double(frame: &mut Frame, index: usize) {
 /**
 d_store指令
 */
-struct DStore {
+pub struct DStore {
     index: usize,
 }
 impl Instruction for DStore {
@@ -253,7 +253,7 @@ impl Instruction for DStore {
 /**
  d_store_0指令把操作数栈顶的double型数值存入第一个局部变量
  */
-struct DStore0;
+pub struct DStore0;
 impl Instruction for DStore0 {
     fn fetch_operands(&mut self, _: &mut ByteCodeReader) {
         // Do nothing
@@ -266,7 +266,7 @@ impl Instruction for DStore0 {
 /**
  d_store_1指令把操作数栈顶的double型数值存入第二个局部变量
  */
-struct DStore1;
+pub struct DStore1;
 impl Instruction for DStore1 {
     fn fetch_operands(&mut self, _: &mut ByteCodeReader) {
         // Do nothing
@@ -279,7 +279,7 @@ impl Instruction for DStore1 {
 /**
  d_store_2指令把操作数栈顶的double型数值存入第三个局部变量
  */
-struct DStore2;
+pub struct DStore2;
 impl Instruction for DStore2 {
     fn fetch_operands(&mut self, _: &mut ByteCodeReader) {
         // Do nothing
@@ -292,7 +292,7 @@ impl Instruction for DStore2 {
 /**
  d_store_3指令把操作数栈顶的double型数值存入第四个局部变量
  */
-struct DStore3;
+pub struct DStore3;
 impl Instruction for DStore3 {
     fn fetch_operands(&mut self, _: &mut ByteCodeReader) {
         // Do nothing
@@ -313,7 +313,7 @@ fn execute_ref(frame: &mut Frame, index: usize) {
 /**
 a_store指令
 */
-struct AStore {
+pub struct AStore {
     index: usize,
 }
 impl Instruction for AStore {
@@ -328,7 +328,7 @@ impl Instruction for AStore {
 /**
  a_store_0指令把操作数栈顶的引用型数值存入第一个局部变量
  */
-struct AStore0;
+pub struct AStore0;
 impl Instruction for AStore0 {
     fn fetch_operands(&mut self, _: &mut ByteCodeReader) {
         // Do nothing
@@ -341,7 +341,7 @@ impl Instruction for AStore0 {
 /**
  a_store_1指令把操作数栈顶的引用型数值存入第二个局部变量
  */
-struct AStore1;
+pub struct AStore1;
 impl Instruction for AStore1 {
     fn fetch_operands(&mut self, _: &mut ByteCodeReader) {
         // Do nothing
@@ -354,7 +354,7 @@ impl Instruction for AStore1 {
 /**
  a_store_2指令把操作数栈顶的引用型数值存入第三个局部变量
  */
-struct AStore2;
+pub struct AStore2;
 impl Instruction for AStore2 {
     fn fetch_operands(&mut self, _: &mut ByteCodeReader) {
         // Do nothing
@@ -367,7 +367,7 @@ impl Instruction for AStore2 {
 /**
  a_store_3指令把操作数栈顶的引用型数值存入第四个局部变量
  */
-struct AStore3;
+pub struct AStore3;
 impl Instruction for AStore3 {
     fn fetch_operands(&mut self, _: &mut ByteCodeReader) {
         // Do nothing
