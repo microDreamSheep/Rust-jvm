@@ -4,6 +4,14 @@ pub struct ByteCodeReader{
 }
 
 impl ByteCodeReader {
+
+    pub fn new(vec:Vec<u8>) -> ByteCodeReader {
+        ByteCodeReader {
+            pc: 0,
+            code: vec,
+        }
+    }
+
     pub fn reset(&mut self, pc: usize, code: Vec<u8>) {
         self.pc = pc;
         self.code = code;
@@ -39,5 +47,10 @@ impl ByteCodeReader {
         self.pc += 4;
         data
     }
-
+    pub fn set_pointer(&mut self, pc: usize) {
+        self.pc = pc;
+    }
+    pub fn get_pointer(&self) -> usize {
+        self.pc
+    }
 }

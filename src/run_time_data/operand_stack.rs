@@ -5,36 +5,36 @@ use crate::run_time_data::slot::Slot;
 
 pub struct OperandStack{
     pub size:u32,
-    slots:Vec<Slot>,
+    slots:Vec<Rc<RefCell<Slot>>>,
 }
 impl OperandStack{
     pub fn new(max_stack:u32)->OperandStack{
         let mut vec = Vec::with_capacity(max_stack as usize);
         for _ in 0..max_stack{
-            vec.push(Slot::new());
+            vec.push(Rc::new(RefCell::new(Slot::new())));
         }
         OperandStack{
             size: 0,
             slots: vec,
         }
     }
-    pub fn get_slots(&mut self) ->&mut Vec<Slot>{
+    pub fn get_slots(&mut self) ->&mut Vec<Rc<RefCell<Slot>>>{
         &mut self.slots
     }
-    pub fn get_slot(&mut self,index:usize) ->&mut Slot{
+    pub fn get_slot(&mut self,index:usize) ->&mut Rc<RefCell<Slot>>{
         self.slots.get_mut(index).unwrap()
     }
 
     pub fn push_int(&mut self,value:i32){
         let size = self.size;
-        self.get_slot(size as usize).set_num(value);
+        self.get_slot(size as usize).borrow_mut().set_num(value);
         self.size += 1;
     }
     pub fn pop_int(&mut self) ->i32{
         self.size -= 1;
         let size = self.size;
-        let slot: &Slot = self.get_slots().get(size as usize).unwrap();
-        *slot.get_num()
+        let slot = self.get_slots().get(size as usize).unwrap();
+        *slot.borrow().get_num()
     }
     pub fn push_float(&mut self,value:f32){
         //float to int
@@ -47,8 +47,8 @@ impl OperandStack{
     }
     pub fn push_long(&mut self,value:i64){
         let size = self.size;
-        self.get_slots().get_mut(size as usize).unwrap().set_num((value & 0xFFFFFFFF) as i32);
-        self.get_slots().get_mut(size as usize + 1).unwrap().set_num((value >> 32) as i32);
+        self.get_slots().get_mut(size as usize).unwrap().borrow_mut().set_num((value & 0xFFFFFFFF) as i32);
+        self.get_slots().get_mut(size as usize + 1).unwrap().borrow_mut().set_num((value >> 32) as i32);
         self.size += 2;
     }
     pub fn pop_long(&mut self) ->i64{
@@ -67,28 +67,25 @@ impl OperandStack{
     }
     pub fn push_ref(&mut self,value:Option<Rc<RefCell<Object>>>){
         let size = self.size;
-        self.get_slots().get_mut(size as usize).unwrap().set_refer(value);
+        self.get_slots().get_mut(size as usize).unwrap().borrow_mut().set_refer(value);
         self.size += 1;
     }
     pub fn pop_ref(&mut self) ->Option<Rc<RefCell<Object>>>{
         self.size -= 1;
         let size = self.size;
-        let slot: &Slot = self.get_slots().get(size as usize).unwrap();
-        slot.get_refer()
+        let slot = self.get_slots().get(size as usize).unwrap();
+        slot.borrow_mut().get_refer()
     }
-    pub fn push_slot(&mut self,slot:Slot){
+    pub fn push_slot(&mut self,slot: Rc<RefCell<Slot>>){
         let size = self.size;
-        self.get_slots().get_mut(size as usize).unwrap().set_num(*slot.get_num());
-        self.get_slots().get_mut(size as usize).unwrap().set_refer(slot.get_refer());
+        self.get_slots().get_mut(size as usize).unwrap().borrow_mut().set_num(*slot.borrow_mut().get_num());
+        self.get_slots().get_mut(size as usize).unwrap().borrow_mut().set_refer(slot.borrow_mut().get_refer());
         self.size += 1;
     }
-    pub fn pop_slot(&mut self) ->Slot{
+    pub fn pop_slot(&mut self) -> Rc<RefCell<Slot>> {
         self.size -= 1;
         let size = self.size;
-        let slot: &Slot = self.get_slots().get(size as usize).unwrap();
-        let mut new_slot = Slot::new();
-        new_slot.set_num(*slot.get_num());
-        new_slot.set_refer(slot.get_refer());
-        new_slot
+        let slot = self.get_slots().get(size as usize).unwrap();
+        Rc::clone(slot)
     }
 }

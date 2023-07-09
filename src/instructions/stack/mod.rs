@@ -1,3 +1,4 @@
+use std::rc::Rc;
 use crate::instructions::byte_code_reader::ByteCodeReader;
 use crate::instructions::Instruction;
 use crate::run_time_data::Frame;
@@ -40,7 +41,7 @@ impl Instruction for Dup {
 
     fn execute(&mut self,frame: &mut Frame) {
         let slot = frame.operator_stack.pop_slot();
-        frame.operator_stack.push_slot(slot);
+        frame.operator_stack.push_slot(Rc::clone(&slot));
         frame.operator_stack.push_slot(slot);
     }
 }
@@ -56,7 +57,7 @@ impl Instruction for DupX1 {
     fn execute(&mut self,frame: &mut Frame) {
         let slot1 = frame.operator_stack.pop_slot();
         let slot2 = frame.operator_stack.pop_slot();
-        frame.operator_stack.push_slot(slot1);
+        frame.operator_stack.push_slot(Rc::clone(&slot1));
         frame.operator_stack.push_slot(slot2);
         frame.operator_stack.push_slot(slot1);
     }
@@ -74,7 +75,7 @@ impl Instruction for DupX2 {
         let slot1 = frame.operator_stack.pop_slot();
         let slot2 = frame.operator_stack.pop_slot();
         let slot3 = frame.operator_stack.pop_slot();
-        frame.operator_stack.push_slot(slot1);
+        frame.operator_stack.push_slot(Rc::clone(&slot1));
         frame.operator_stack.push_slot(slot3);
         frame.operator_stack.push_slot(slot2);
         frame.operator_stack.push_slot(slot1);
@@ -92,8 +93,8 @@ impl Instruction for Dup2 {
     fn execute(&mut self,frame: &mut Frame) {
         let slot1 = frame.operator_stack.pop_slot();
         let slot2 = frame.operator_stack.pop_slot();
-        frame.operator_stack.push_slot(slot2);
-        frame.operator_stack.push_slot(slot1);
+        frame.operator_stack.push_slot(Rc::clone(&slot2));
+        frame.operator_stack.push_slot(Rc::clone(&slot1));
         frame.operator_stack.push_slot(slot2);
         frame.operator_stack.push_slot(slot1);
     }
@@ -111,8 +112,8 @@ impl Instruction for Dup2X1 {
         let slot1 = frame.operator_stack.pop_slot();
         let slot2 = frame.operator_stack.pop_slot();
         let slot3 = frame.operator_stack.pop_slot();
-        frame.operator_stack.push_slot(slot2);
-        frame.operator_stack.push_slot(slot1);
+        frame.operator_stack.push_slot(Rc::clone(&slot2));
+        frame.operator_stack.push_slot(Rc::clone(&slot1));
         frame.operator_stack.push_slot(slot3);
         frame.operator_stack.push_slot(slot2);
         frame.operator_stack.push_slot(slot1);
@@ -132,8 +133,8 @@ impl Instruction for Dup2X2 {
         let slot2 = frame.operator_stack.pop_slot();
         let slot3 = frame.operator_stack.pop_slot();
         let slot4 = frame.operator_stack.pop_slot();
-        frame.operator_stack.push_slot(slot2);
-        frame.operator_stack.push_slot(slot1);
+        frame.operator_stack.push_slot(Rc::clone(&slot2));
+        frame.operator_stack.push_slot(Rc::clone(&slot1));
         frame.operator_stack.push_slot(slot4);
         frame.operator_stack.push_slot(slot3);
         frame.operator_stack.push_slot(slot2);

@@ -204,7 +204,7 @@ impl Instruction for LConst1 {
 BIPush指令从操作数中获取一个byte型整数，扩展成int型，然后推入栈顶
  */
 pub struct BIPush {
-    val: i8,
+    pub(crate) val: i8,
 }
 impl Instruction for BIPush {
     fn fetch_operands(&mut self, reader: &mut ByteCodeReader) {

@@ -53,4 +53,8 @@ impl ByteCodeReader {
         }
         vec
     }
+
+    pub fn set_pointer(&mut self, pointer:usize){
+        self.pointer = pointer;
+    }
 }

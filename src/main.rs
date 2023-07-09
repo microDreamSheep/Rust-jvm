@@ -2,11 +2,16 @@ extern crate core;
 
 use crate::class_file::ClassFile;
 use std::env;
+use std::io::Read;
 use std::ops::Deref;
 use std::time::Instant;
+use crate::class_file::attribute::CodeAttribute;
 use crate::class_file::constant_info::{ConstantClassInfo, ConstantInfo};
+use crate::class_file::reader::ByteCodeReader;
 use crate::class_path::parse;
 use crate::cmd::Environment;
+use crate::instructions::{byte_code_reader, get_instruction, Instruction};
+use crate::run_time_data::{Frame, RThread};
 
 mod cmd;
 mod class_path;
@@ -29,10 +34,28 @@ fn main() {
     }
 }
 fn start(env:Environment){
-    let class_path = parse(env);
-    let (data,_) = class_path.read_class("java/lang/String.class");
-
-    let start = Instant::now();
+    //io读取class文件的字节数据
+    let mut file = std::fs::File::open("E://A//test.class").unwrap();
+    let mut data = Vec::new();
+    file.read_to_end(&mut data).unwrap();
     let class_file = ClassFile::parse(data);
+    let constants = class_file.constant_pool.borrow();
+     for x in class_file.methods {
+        if constants.get_utf8(&x.name_index).eq("main") {
+            for x in x.attributes {
+                let a =  x.as_any().downcast_ref::<CodeAttribute>().unwrap().code.clone();
+                let mut frame = Frame::new(None, 50, 50, byte_code_reader::ByteCodeReader::new(a.clone()));
+                loop {
+                    let opcode = frame.get_reader().read_uint8();
+                    let mut inst = get_instruction(opcode);
+                    inst.fetch_operands(&mut frame.get_reader());
+                    inst.execute(&mut frame);
+                    if frame.get_reader().get_pointer() >= a.len() {
+                        break;
+                    }
+                }
 
+            }
+        }
+    }
 }

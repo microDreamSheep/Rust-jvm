@@ -202,7 +202,7 @@ impl Instruction for IFIcmpGe {
 }
 
 pub struct IFACmpEq {
-    offset: i16,
+    pub(crate) offset: i16,
 }
 impl Instruction for IFACmpEq {
     fn fetch_operands(&mut self, reader: &mut ByteCodeReader) {
